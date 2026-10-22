@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controlo de Acesso</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#14181f;--mut:#667085;--pri:#1d4ed8;--ok:#15803d;--bad:#b91c1c;--bd:#e3e6eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--tx:#eef0f4;--mut:#9aa3b2;--pri:#6b94ff;--ok:#4ade80;--bad:#f87171;--bd:#272d38}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.w{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 6px;cursor:pointer}
+button.p{background:var(--pri);border-color:var(--pri);color:#fff}
+button.on{border-color:var(--pri);color:var(--pri);font-weight:600}
+input,select{width:100%;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;margin:4px 0 10px}
+label,.mt{font-size:13px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ph{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--bd);flex:none}
+.big{width:110px;height:110px;border-radius:14px;object-fit:cover;background:var(--bd)}
+.grow{flex:1;min-width:0}.nm{font-weight:600}.cd{font-family:ui-monospace,Menlo,monospace;letter-spacing:2px;font-weight:700}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.hide{display:none!important}
+.res{border-width:2px}.res.g{border-color:var(--ok)}.res.r{border-color:var(--bad)}
+video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
+.bar{height:10px;border-radius:5px;background:var(--pri);margin-top:4px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.cardd{background:#fff;color:#111;border-radius:16px;padding:20px;width:100%;max-width:320px;text-align:center}
+.cardd img{width:96px;height:96px;border-radius:50%;object-fit:cover}.cardd svg{width:200px;height:200px;margin:8px 0}
+@media print{body *{visibility:hidden}.cardd,.cardd *{visibility:visible}.cardd{position:absolute;left:0;top:0}}
+</style>
+</head>
+<body>
+<div class="w">
+<div class="top"><h1>Controlo de Acesso v2</h1><button id="sair" class="hide" onclick="sair()">Sair</button></div>
+
+<div id="login" class="card">
+  <label>E-mail</label><input id="em" type="email" autocomplete="username">
+  <label>Senha</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="p" style="width:100%" onclick="entrar()">Entrar</button>
+  <p class="mt bad" id="lerr"></p>
+</div>
+
+<div id="app" class="hide">
+  <div class="tabs">
+    <button id="t1" class="on" onclick="tab(1)">Portaria</button>
+    <button id="t2" onclick="tab(2)">Alunos</button>
+    <button id="t3" onclick="tab(3)">Novo</button>
+    <button id="t4" onclick="tab(4)">Relatório</button>
+  </div>
+
+  <div id="v1">
+    <div class="card">
+      <label>Código do aluno</label>
+      <input id="cod" placeholder="Ex.: FGX580" autocapitalize="characters" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')verificar()">
+      <div class="g2"><button class="p" onclick="verificar()">Verificar</button><button onclick="scan()">Escanear QR</button></div>
+    </div>
+    <video id="vid" class="hide" playsinline muted></video>
+    <div id="res"></div>
+  </div>
+
+  <div id="v2" class="hide">
+    <input id="q" placeholder="Pesquisar nome, código, curso…" oninput="lista()">
+    <div id="list"></div>
+  </div>
+
+  <div id="v3" class="hide"><div class="card">
+    <label>Nome completo</label><input id="nome">
+    <div class="g2">
+      <div><label>Classe</label><select id="classe"><option>7.ª</option><option>8.ª</option><option>9.ª</option><option>10.ª</option><option>11.ª</option><option>12.ª</option><option>13.ª</option></select></div>
+      <div><label>Idade</label><input id="idade" type="number" min="10" max="40"></div>
+    </div>
+    <label>Curso</label><input id="curso" placeholder="Informática, Eletricidade…">
+    <label>Turno</label><select id="turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select>
+    <label>Foto</label><input id="foto" type="file" accept="image/*">
+    <button class="p" style="width:100%" onclick="salvar()">Cadastrar e gerar código</button>
+    <p class="mt" id="msg"></p>
+  </div></div>
+
+  <div id="v4" class="hide">
+    <label>Data</label><input id="dia" type="date" onchange="relatorio()">
+    <div id="rel"></div>
+  </div>
+</div>
+</div>
+
+<div id="modal" class="hide" onclick="if(event.target===this)fechar()"><div>
+  <div class="cardd" id="cartao"></div>
+  <div class="g2" style="margin-top:10px"><button onclick="window.print()">Imprimir</button><button onclick="fechar()">Fechar</button></div>
+</div></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,doc,getDoc,getDocs,setDoc,updateDoc,query,where} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyA4NBJ85Nmgwr49vtDc2bAXYgfch3Vflfk",
+  authDomain:"ipib-acesso.firebaseapp.com",
+  projectId:"ipib-acesso",
+  storageBucket:"ipib-acesso.firebasestorage.app",
+  messagingSenderId:"1070987462741",
+  appId:"1:1070987462741:web:81ce700d21a8cebfb4ecdc"});
+const auth=getAuth(app),db=getFirestore(app);
+const $=i=>document.getElementById(i);
+const esc=s=>{const d=document.createElement("div");d.textContent=s==null?"":String(s);return d.innerHTML};
+const hoje=()=>new Date().toLocaleDateString("sv-SE");
+const hora=()=>new Date().toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"});
+const AB="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",ANO="2026/27";
+let alunos=[],stream=null,rodando=false;
+const W=(n,f)=>window[n]=f;
+
+W("entrar",async()=>{
+  $("lerr").textContent="";
+  try{await signInWithEmailAndPassword(auth,$("em").value.trim(),$("pw").value)}
+  catch(e){$("lerr").textContent="E-mail ou senha incorretos."}
+});
+W("sair",()=>signOut(auth));
+onAuthStateChanged(auth,u=>{
+  $("login").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);$("sair").classList.toggle("hide",!u);
+  if(u){$("dia").value=hoje();carregar()}
+});
+W("tab",n=>{
+  for(let i=1;i<=4;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
+  if(n!==1)parar();if(n===4)relatorio()
+});
+
+async function carregar(){
+  const s=await getDocs(collection(db,"students"));
+  alunos=s.docs.map(d=>d.data()).sort((a,b)=>a.nome.localeCompare(b.nome));lista()
+}
+function novoCodigo(){let c;do{c="";for(let i=0;i<6;i++)c+=AB[Math.floor(Math.random()*AB.length)]}while(alunos.some(a=>a.codigo===c));return c}
+const reduzir=f=>new Promise(res=>{
+  if(!f)return res("");const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=200;
+    const m=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,200,200);res(c.toDataURL("image/jpeg",.7))};
+    im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)});
+
+W("salvar",async()=>{
+  const n=$("nome").value.trim(),cu=$("curso").value.trim();
+  if(!n||!cu){$("msg").textContent="Preencha nome e curso.";return}
+  $("msg").textContent="A guardar…";
+  const a={codigo:novoCodigo(),nome:n,classe:$("classe").value,idade:Number($("idade").value)||0,curso:cu,turno:$("turno").value,foto:await reduzir($("foto").files[0]),ano:ANO,ativo:true,criado:new Date().toISOString()};
+  try{await setDoc(doc(db,"students",a.codigo),a)}catch(e){$("msg").textContent="Erro ao guardar. Verifique as regras do Firestore.";return}
+  alunos.push(a);["nome","idade","curso","foto"].forEach(i=>$(i).value="");$("msg").textContent="";
+  lista();tab(2);cartao(a.codigo)
+});
+W("lista",()=>{
+  const q=$("q").value.toLowerCase();let h="";
+  const f=alunos.filter(a=>(a.nome+a.codigo+a.curso+a.classe).toLowerCase().includes(q));
+  if(!f.length)h='<p class="mt">Nenhum aluno encontrado.</p>';
+  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${a.foto?`<img class="ph" src="${a.foto}" alt="">`:'<div class="ph"></div>'}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Ativo":"Bloqueado"}</div></div></div>`});
+  $("list").innerHTML=h
+});
+W("cartao",cod=>{
+  const a=alunos.find(x=>x.codigo===cod);if(!a)return;
+  const qr=qrcode(0,"M");qr.addData(a.codigo);qr.make();
+  $("cartao").innerHTML=(a.foto?`<img src="${a.foto}" alt="">`:"")+`<div style="font-weight:700;margin-top:6px">${esc(a.nome)}</div><div>${qr.createSvgTag(4,0)}</div><div class="cd" style="font-size:22px">${esc(a.codigo)}</div><div style="color:#667085;font-size:13px">Ano letivo ${esc(a.ano)}</div><button style="margin-top:10px;color:#111" onclick="alternar('${a.codigo}')">${a.ativo?"Bloquear código":"Reativar código"}</button>`;
+  $("modal").classList.remove("hide")
+});
+W("alternar",async cod=>{
+  const a=alunos.find(x=>x.codigo===cod);a.ativo=!a.ativo;
+  await updateDoc(doc(db,"students",cod),{ativo:a.ativo});lista();cartao(cod)
+});
+W("fechar",()=>$("modal").classList.add("hide"));
+
+W("verificar",async(c)=>{
+  const cod=(typeof c==="string"?c:$("cod").value).trim().toUpperCase();if(!cod)return;
+  parar();$("res").innerHTML='<p class="mt">A verificar…</p>';
+  let a;try{const s=await getDoc(doc(db,"students",cod));a=s.exists()?s.data():null}catch(e){$("res").innerHTML='<div class="card res r bad nm">Erro de ligação.</div>';return}
+  if(!a){$("res").innerHTML=`<div class="card res r"><div class="nm bad">Código não encontrado</div><div class="cd">${esc(cod)}</div></div>`;return}
+  const info=`<div class="row" style="margin-top:8px">${a.foto?`<img class="big" src="${a.foto}" alt="">`:'<div class="big"></div>'}<div class="grow"><div class="nm" style="font-size:18px">${esc(a.nome)}</div><div>${esc(a.classe)} · ${esc(a.curso)}</div><div class="mt">Turno: ${esc(a.turno)} · ${esc(a.idade)} anos</div><div class="cd">${esc(a.codigo)}</div></div></div>`;
+  if(!a.ativo){$("res").innerHTML=`<div class="card res r"><div class="nm bad">⛔ ACESSO BLOQUEADO</div>${info}</div>`;return}
+  const id=hoje()+"_"+a.codigo,ref=doc(db,"entradas",id);let st;
+  try{const e=await getDoc(ref);
+    if(e.exists())st=`<div class="nm" style="color:#b45309">Já registado hoje às ${esc(e.data().hora)}</div>`;
+    else{await setDoc(ref,{data:hoje(),hora:hora(),codigo:a.codigo,nome:a.nome,classe:a.classe,curso:a.curso,turno:a.turno});st='<div class="nm ok">✔ Entrada registada</div>'}
+  }catch(e){st='<div class="nm bad">Não foi possível registar</div>'}
+  $("res").innerHTML=`<div class="card res g">${st}${info}</div>`;$("cod").value=""
+});
+
+W("scan",async()=>{
+  if(!("BarcodeDetector" in window)){$("res").innerHTML='<p class="mt">Este navegador não lê QR. Use o Chrome ou digite o código.</p>';return}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})}catch(e){$("res").innerHTML='<p class="mt">Sem acesso à câmara.</p>';return}
+  const v=$("vid");v.srcObject=stream;v.classList.remove("hide");await v.play();rodando=true;
+  const det=new BarcodeDetector({formats:["qr_code"]});
+  const loop=async()=>{if(!rodando)return;try{const r=await det.detect(v);if(r.length){verificar(r[0].rawValue);return}}catch(e){}setTimeout(loop,250)};loop()
+});
+function parar(){rodando=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("vid").classList.add("hide")}
+
+W("relatorio",async()=>{
+  const d=$("dia").value||hoje();$("rel").innerHTML='<p class="mt">A carregar…</p>';
+  let es;try{es=(await getDocs(query(collection(db,"entradas"),where("data","==",d)))).docs.map(x=>x.data())}catch(e){$("rel").innerHTML='<p class="bad">Erro ao carregar.</p>';return}
+  const grupo=(f)=>{const m={};es.forEach(e=>{const k=f(e);m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+  const bloco=(t,arr)=>{const mx=arr.length?arr[0][1]:1;return `<div class="card"><div class="nm">${t}</div>`+(arr.length?arr.map(([k,n])=>`<div style="margin-top:8px"><div class="row"><span class="grow">${esc(k)}</span><b>${n}</b></div><div class="bar" style="width:${Math.max(4,n/mx*100)}%"></div></div>`).join(""):'<p class="mt">Sem dados.</p>')+"</div>"};
+  $("rel").innerHTML=`<div class="card"><div class="mt">Entradas em ${esc(d)}</div><div style="font-size:36px;font-weight:700">${es.length}</div><div class="mt">alunos de ${alunos.length} cadastrados</div></div>`+
+    bloco("Por turma (mais alunos primeiro)",grupo(e=>`${e.classe} ${e.curso} · ${e.turno}`))+bloco("Por curso",grupo(e=>e.curso))+bloco("Por turno",grupo(e=>e.turno))
+});
+</script>
+</body>
+</html>
