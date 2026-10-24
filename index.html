@@ -112,7 +112,8 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <label>Motivo (se rejeitar)</label><input id="motivo">
     <div class="g2"><button class="p" onclick="aprovar(true)">Aprovar</button><button onclick="aprovar(false)">Rejeitar</button></div>
     <p class="mt" id="amsg"></p>
-  </div></div>
+  </div>
+  <div class="card"><div class="nm" style="margin-bottom:6px">Alunos novos (últimos 30 dias)</div><div id="novos"></div></div></div>
 
   <div id="v8" class="hide"><div id="pnl"></div></div>
 
@@ -179,12 +180,16 @@ W("entrar",async()=>{
 });
 W("sair",()=>signOut(auth));
 const ROT={admin:"Administrador",secretaria:"Secretaria",diretor:"Diretor",coordenador:"Coordenação",seguranca:"Segurança"};
-const TABS={admin:[1,2,3,4,6,7,5],secretaria:[2,3,6,4],diretor:[7,4],coordenador:[8,2],seguranca:[1]};
+const TABS={admin:[1,2,3,4,6,7,5],secretaria:[2,3,6],diretor:[7],coordenador:[8,2],seguranca:[1]};
+const SITE=new URLSearchParams(location.search).get("s")||"";
+const SITES={secretaria:{t:"Secretaria",r:["secretaria"]},diretor:{t:"Direção",r:["diretor"]},coordenacao:{t:"Coordenação",r:["coordenador"]},entrada:{t:"Entrada",r:["seguranca"]}};
+if(SITES[SITE]){document.querySelector(".top h1").textContent=SITES[SITE].t;document.title=SITES[SITE].t+" · IPIB"}
 onAuthStateChanged(auth,async u=>{
   if(new URLSearchParams(location.search).get("c"))return;
   if(!u){ME=null;$("login").classList.remove("hide");$("app").classList.add("hide");$("sair").classList.add("hide");return}
   try{const r=await getDoc(doc(db,"users",u.uid));ME=r.exists()?r.data():null}catch(e){ME=null}
   if(!ME||!TABS[ME.role]){$("lerr").textContent="Esta conta ainda não tem perfil. Fale com o administrador.";await signOut(auth);return}
+  if(SITES[SITE]&&ME.role!=="admin"&&!SITES[SITE].r.includes(ME.role)){$("lerr").textContent="Esta conta não pertence ao site "+SITES[SITE].t+".";await signOut(auth);return}
   $("login").classList.add("hide");$("app").classList.remove("hide");$("sair").classList.remove("hide");
   $("quem").textContent=(ME.nome?ME.nome+" · ":"")+ROT[ME.role]+(ME.area?" · "+ME.area:"");
   $("dia").value=hoje();await carregar();
@@ -223,7 +228,7 @@ const reduzir=f=>new Promise(res=>{
 const LOGO=()=>ESC.logo||LOGO0;
 const urlCartao=c=>"https://airesgfsfsvfvffhgjg.github.io/IPIB-ACESSO-/?c="+c;
 const codDe=r=>{const m=String(r).match(/[?&]c=([A-Za-z0-9]+)/);return m?m[1]:r};
-const pubDe=a=>({nome:a.nome,foto:a.foto||"",fz:a.fz||1,fx:a.fx??50,fy:a.fy??50,classe:a.classe,curso:a.curso,turno:a.turno,area:a.area||"",ativo:a.ativo,fp:a.fp||{},ano:a.ano||""});
+const pubDe=a=>({nome:a.nome,foto:a.foto||"",fz:a.fz||1,fx:a.fx??50,fy:a.fy??50,classe:a.classe,curso:a.curso,turno:a.turno,area:a.area||"",ativo:a.ativo,fp:a.fp||{},ano:a.ano||"",criado:a.criado||""});
 const sinc=a=>setDoc(doc(db,"cartoes",a.codigo),pubDe(a));
 const AREAS0=["Eletricidade","Informática","Eletrónica e Telecomunicações","Mecânica"];
 const TRIM0=[{ini:"2026-09-01",fim:"2026-11-30"},{ini:"2026-12-01",fim:"2027-02-28"},{ini:"2027-03-01",fim:"2027-06-30"}];
@@ -267,7 +272,12 @@ async function guardaRas(est){
 }
 W("guardarRas",()=>guardaRas("rascunho"));W("enviarRas",()=>guardaRas("pendente"));
 function estadoCal(){if(!$("cest")||!RAS)return;const e=RAS.estado||"aprovado";$("cest").innerHTML={rascunho:"Estado: rascunho (ainda não enviado)",pendente:"Estado: <b>pendente</b> — à espera da aprovação do diretor",aprovado:"Estado: <b class='ok'>aprovado</b>",rejeitado:"Estado: <b class='bad'>rejeitado</b> — "+esc(RAS.motivo||"sem motivo indicado")}[e]||""}
-function aprov(){if(!$("apv")||!RAS)return;
+async function novos(){const el=$("novos");if(!el)return;
+  try{const lim=new Date(Date.now()-30*864e5).toISOString();
+    const l=(await getDocs(collection(db,"cartoes"))).docs.map(d=>d.data()).filter(a=>a.criado&&a.criado>=lim).sort((a,b)=>b.criado.localeCompare(a.criado));
+    el.innerHTML=l.length?l.map(a=>`<div class="pr"><span>${esc(a.nome)}<br><span class="mt">${esc(a.classe)} · ${esc(a.curso)}${a.area?" · "+esc(a.area):""}</span></span><b class="ok">Ativo</b></div>`).join(""):'<p class="mt">Nenhum aluno novo neste período.</p>'
+  }catch(e){el.innerHTML='<p class="mt">Não foi possível carregar.</p>'}}
+function aprov(){if(!$("apv")||!RAS)return;novos();
   const pr=(RAS.provas||[]).map(p=>`<div class="pr"><span>${esc(p.nome)}<br><span class="mt">${esc(p.area||"Todas")} · ${p.c1||7}.ª a ${p.c2||12}.ª</span></span><b>${dd(p.ini)} – ${dd(p.fim)}</b></div>`).join("")||'<p class="mt">Sem provas.</p>';
   const tr=(RAS.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre</span><b>${dd(t.ini)} – ${dd(t.fim)}</b></div>`).join("");
   $("apv").innerHTML=`<p class="mt">Estado: <b>${esc(RAS.estado||"aprovado")}</b>${RAS.por?" · enviado por "+esc(RAS.por):""}</p><div class="pr"><span>Ano letivo ${esc(RAS.ano||"")}</span><b>${dd(RAS.ini)} – ${dd(RAS.fim)}</b></div>${tr}<div class="nm" style="margin-top:10px">Provas</div>${pr}`}
