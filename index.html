@@ -188,7 +188,7 @@ const reduzir=f=>new Promise(res=>{
     im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)});
 
 const LOGO=()=>ESC.logo||LOGO0;
-const urlCartao=c=>location.href.split(/[?#]/)[0]+"?c="+c;
+const urlCartao=c=>"https://airesgfsfsvfvffhgjg.github.io/IPIB-ACESSO-/?c="+c;
 const codDe=r=>{const m=String(r).match(/[?&]c=([A-Za-z0-9]+)/);return m?m[1]:r};
 const pubDe=a=>({nome:a.nome,foto:a.foto||"",fz:a.fz||1,fx:a.fx??50,fy:a.fy??50,classe:a.classe,curso:a.curso,turno:a.turno,area:a.area||"",ativo:a.ativo,fp:a.fp||{},ano:a.ano||""});
 const sinc=a=>setDoc(doc(db,"cartoes",a.codigo),pubDe(a));
