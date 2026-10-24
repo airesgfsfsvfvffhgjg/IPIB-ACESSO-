@@ -12,7 +12,7 @@
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
 .w{max-width:640px;margin:0 auto;padding:16px}
 h1{font-size:20px;margin:0}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:12px;background:#2b4a8f;border-bottom:5px solid #3f9b3f;border-radius:14px}.top h1{color:#fff}.top button{background:#fff;color:#2b4a8f;border-color:#fff;font-weight:600}.hl{width:46px;height:46px;object-fit:contain;background:#fff;border-radius:10px;padding:2px}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:14px}.tabs button{font-size:13px;padding:10px 2px}.pr{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:15px}.pg{color:var(--ok)}.np{color:var(--bad)}.logo{max-height:70px;max-width:70%;display:block;margin:0 auto 8px;background:#fff;border-radius:12px;padding:4px}.ck{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}.ck label{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--tx)}.ck input{width:auto;margin:0}
+.tabs{display:flex;overflow-x:auto;gap:6px;margin-bottom:14px;padding-bottom:4px}.tabs button{flex:none;font-size:14px;padding:10px 14px}.pr{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:15px}.pg{color:var(--ok)}.np{color:var(--bad)}.logo{max-height:70px;max-width:70%;display:block;margin:0 auto 8px;background:#fff;border-radius:12px;padding:4px}.ck{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}.ck label{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--tx)}.ck input{width:auto;margin:0}
 button,input,select{font:inherit;color:inherit}
 button{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 6px;cursor:pointer}
 button.p{background:var(--pri);border-color:var(--pri);color:#fff}
@@ -41,6 +41,8 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 <div class="w">
 <div class="top"><div class="row"><img class="hl lg" alt=""><h1>Controlo de Acesso</h1></div><button id="sair" class="hide" onclick="sair()">Sair</button></div>
 
+<div id="pub" class="hide"></div>
+
 <div id="login" class="card">
   <img class="logo lg" alt="" style="max-height:110px">
   <label>E-mail</label><input id="em" type="email" autocomplete="username">
@@ -55,6 +57,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <button id="t2" onclick="tab(2)">Alunos</button>
     <button id="t3" onclick="tab(3)">Novo</button>
     <button id="t4" onclick="tab(4)">Relatório</button>
+    <button id="t6" onclick="tab(6)">Calendário</button>
     <button id="t5" onclick="tab(5)">Escola</button>
   </div>
 
@@ -78,9 +81,10 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <label>Nome completo</label><input id="nome">
     <label>Nº de registo académico (opcional)</label><input id="reg">
     <div class="g2">
-      <div><label>Classe</label><select id="classe"><option>7.ª</option><option>8.ª</option><option>9.ª</option><option>10.ª</option><option>11.ª</option><option>12.ª</option><option>13.ª</option></select></div>
+      <div><label>Classe</label><select id="classe" onchange="montaFp()"><option>7.ª</option><option>8.ª</option><option>9.ª</option><option>10.ª</option><option>11.ª</option><option>12.ª</option><option>13.ª</option></select></div>
       <div><label>Idade</label><input id="idade" type="number" min="10" max="40"></div>
     </div>
+    <label>Área</label><select id="area" onchange="montaFp()"></select>
     <label>Curso</label><input id="curso" placeholder="Informática, Eletricidade…">
     <label>Turno</label><select id="turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select>
     <label>Foto (vazio = manter a atual)</label><input id="foto" type="file" accept="image/*" onchange="escolheFoto()">
@@ -99,22 +103,31 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <div id="rel"></div>
   </div>
 
+  <div id="v6" class="hide"><div class="card">
+    <div class="nm" style="margin-bottom:6px">Ano letivo (definido pela secretaria)</div>
+    <label>Ano letivo</label><input id="escano" placeholder="2026/27">
+    <div class="row2"><div><label>Início do ano</label><input type="date" id="aini"></div><div><label>Fim do ano</label><input type="date" id="afim"></div></div>
+    <div class="nm" style="margin:6px 0">Trimestres</div><div id="trbox"></div>
+    <div class="nm" style="margin:12px 0 4px">Provas por área e classe</div>
+    <p class="mt">O aviso da folha de prova aparece 14 dias antes do início e desaparece depois do fim. Ponha como fim o último dia de prova da área.</p>
+    <div id="prbox"></div><button onclick="addProva()" style="width:100%;margin-bottom:10px">+ Adicionar período de provas</button>
+    <button class="p" style="width:100%" onclick="salvarCal()">Guardar calendário</button>
+    <p class="mt" id="cmsg"></p>
+  </div></div>
+
   <div id="v5" class="hide"><div class="card">
     <div class="nm" style="margin-bottom:8px">Dados da escola</div>
     <label>Nome da instituição</label><input id="escnome">
     <label>Polo</label><input id="escpolo" placeholder="Ex.: Benguela">
-    <label>Ano letivo</label><input id="escano" placeholder="2026/27">
-    <div class="nm" style="margin:6px 0">Trimestres (início e fim)</div><div id="trbox"></div>
-    <div class="nm" style="margin:10px 0 4px">Provas (folha de prova)</div>
-    <p class="mt">O aviso aparece 14 dias antes do início e desaparece depois do fim. Ponha como fim o último dia em que algum aluno faz prova.</p>
-    <div id="prbox"></div><button onclick="addProva()" style="width:100%;margin-bottom:10px">+ Adicionar período de provas</button>
+    <label>Áreas do instituto (separadas por vírgula)</label><input id="escareas">
     <label>Logótipo (vazio = logótipo do IPIB)</label><input id="logof" type="file" accept="image/*">
     <div id="prevl"></div>
     <button class="p" style="width:100%" onclick="salvarEscola()">Guardar</button>
+    <button onclick="sincTodos()" style="width:100%;margin-top:8px">Atualizar cartões públicos</button>
+    <p class="mt">Use uma vez para os alunos já cadastrados.</p>
     <p class="mt" id="emsg"></p>
   </div></div>
 </div>
-<p class="mt" style="text-align:center">v7</p>
 </div>
 
 <div id="modal" class="hide" onclick="if(event.target===this)fechar()"><div>
@@ -152,11 +165,12 @@ W("entrar",async()=>{
 });
 W("sair",()=>signOut(auth));
 onAuthStateChanged(auth,u=>{
+  if(new URLSearchParams(location.search).get("c"))return;
   $("login").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);$("sair").classList.toggle("hide",!u);
   if(u){$("dia").value=hoje();carregar()}
 });
 W("tab",n=>{
-  if(n!==3&&EDIT)limparForm();for(let i=1;i<=5;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
+  if(n!==3&&EDIT)limparForm();for(let i=1;i<=6;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
   if(n!==1)parar();if(n===4)relatorio()
 });
 
@@ -164,8 +178,8 @@ async function carregar(){
   const s=await getDocs(collection(db,"students"));
   alunos=s.docs.map(d=>d.data()).sort((a,b)=>a.nome.localeCompare(b.nome));lista();
   try{const e=await getDoc(doc(db,"config","escola"));if(e.exists())ESC=e.data()}catch(e){}
-  ESC.trim=ESC.trim||TRIM0;ESC.provas=ESC.provas||[];ESC.ano=ESC.ano||ANO;
-  $("escnome").value=ESC.nome||"";$("escpolo").value=ESC.polo||"";$("escano").value=ESC.ano;desenhaEsc();montaCk();montaFp();prevL()
+  ESC.trim=ESC.trim||TRIM0;ESC.provas=ESC.provas||[];ESC.ano=ESC.ano||ANO;ESC.areas=ESC.areas||AREAS0;ESC.ini=ESC.ini||"2026-09-01";ESC.fim=ESC.fim||"2027-06-30";
+  $("escnome").value=ESC.nome||"";$("escpolo").value=ESC.polo||"";$("escano").value=ESC.ano;$("escareas").value=ESC.areas.join(", ");$("aini").value=ESC.ini;$("afim").value=ESC.fim;montaAreas();desenhaEsc();montaCk();montaFp();prevL()
 }
 function novoCodigo(){let c;do{c="";for(let i=0;i<6;i++)c+=AB[Math.floor(Math.random()*AB.length)]}while(alunos.some(a=>a.codigo===c));return c}
 const reduzir=f=>new Promise(res=>{
@@ -174,55 +188,69 @@ const reduzir=f=>new Promise(res=>{
     im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)});
 
 const LOGO=()=>ESC.logo||LOGO0;
+const urlCartao=c=>location.href.split(/[?#]/)[0]+"?c="+c;
+const codDe=r=>{const m=String(r).match(/[?&]c=([A-Za-z0-9]+)/);return m?m[1]:r};
+const pubDe=a=>({nome:a.nome,foto:a.foto||"",fz:a.fz||1,fx:a.fx??50,fy:a.fy??50,classe:a.classe,curso:a.curso,turno:a.turno,area:a.area||"",ativo:a.ativo,fp:a.fp||{},ano:a.ano||""});
+const sinc=a=>setDoc(doc(db,"cartoes",a.codigo),pubDe(a));
+const AREAS0=["Eletricidade","Informática","Eletrónica e Telecomunicações","Mecânica"];
 const TRIM0=[{ini:"2026-09-01",fim:"2026-11-30"},{ini:"2026-12-01",fim:"2027-02-28"},{ini:"2027-03-01",fim:"2027-06-30"}];
 const dd=d=>d?d.split("-").reverse().join("/"):"—";
 const foto=(a,cls)=>`<span class="fw ${cls}">${a.foto?`<img src="${a.foto}" alt="" style="object-position:${a.fx??50}% ${a.fy??50}%;transform:scale(${a.fz||1});transform-origin:${a.fx??50}% ${a.fy??50}%">`:""}</span>`;
 const dias=(d,n)=>{const x=new Date(d+"T00:00:00");x.setDate(x.getDate()+n);return x.toLocaleDateString("sv-SE")};
+const aplica=(p,area,n)=>(!p.area||p.area==="Todas"||p.area===area)&&n>=(p.c1||7)&&n<=(p.c2||12);
 const avisos=a=>{const n=parseInt(a.classe);if(n<7||n>12)return"";const h=hoje();
-  return (ESC.provas||[]).filter(p=>p.ini&&p.fim&&h>=dias(p.ini,-14)&&h<=p.fim).map(p=>{const ok=a.fp&&a.fp[p.id];return `<div class="al ${ok?"g":"r"}">${ok?"✔ Folha de prova paga":"⚠ Folha de prova NÃO paga"}<small>${esc(p.nome)} · ${dd(p.ini)} a ${dd(p.fim)}</small></div>`}).join("")};
-let EDIT=null,FT="",ESC={nome:"",polo:"",logo:"",ano:ANO,trim:TRIM0,provas:[]};
+  return (ESC.provas||[]).filter(p=>aplica(p,a.area,n)&&p.ini&&p.fim&&h>=dias(p.ini,-14)&&h<=p.fim).map(p=>{const ok=a.fp&&a.fp[p.id];return `<div class="al ${ok?"g":"r"}">${ok?"✔ Folha de prova paga":"⚠ Folha de prova NÃO paga"}<small>${esc(p.nome)} · ${dd(p.ini)} a ${dd(p.fim)}</small></div>`}).join("")};
+let EDIT=null,FT="",FPT={},ESC={nome:"",polo:"",logo:"",ano:ANO,ini:"",fim:"",areas:AREAS0,trim:TRIM0,provas:[]};
 const ciclo=c=>parseInt(c)<=9?"1.º Ciclo":"2.º Ciclo";
 function montaCk(p){$("ck").innerHTML=ESC.trim.map((t,i)=>`<label><input type="checkbox" id="pm${i}" ${p&&p[i]?"checked":""}>${i+1}.º Trimestre (${dd(t.ini)} – ${dd(t.fim)})</label>`).join("")}
-function montaFp(f){$("fpck").innerHTML=ESC.provas.length?ESC.provas.map((p,i)=>`<label><input type="checkbox" id="fp${i}" ${f&&f[p.id]?"checked":""}>${esc(p.nome)}</label>`).join(""):'<span class="mt">Sem períodos de provas (veja a aba Escola).</span>'}
+function montaFp(){const ar=$("area").value,n=parseInt($("classe").value);const l=ESC.provas.filter(p=>aplica(p,ar,n));$("fpck").innerHTML=l.length?l.map(p=>`<label><input type="checkbox" ${FPT[p.id]?"checked":""} onchange="setFp('${p.id}',this.checked)">${esc(p.nome)}</label>`).join(""):'<span class="mt">Sem provas para esta área e classe (veja a aba Calendário).</span>'}
+W("setFp",(id,v)=>{FPT[id]=v});
+function montaAreas(){const v=$("area").value;$("area").innerHTML=ESC.areas.map(x=>`<option>${esc(x)}</option>`).join("");if(v)$("area").value=v}
 montaCk();
-function limparForm(){["nome","idade","curso","foto","reg"].forEach(i=>$(i).value="");montaCk();montaFp();FT="";$("fz").value=1;$("fx").value=50;$("fy").value=50;ajFoto();EDIT=null;$("ftit").textContent="Novo aluno";$("btnsalvar").textContent="Cadastrar e gerar código";$("msg").textContent=""}
+function limparForm(){["nome","idade","curso","foto","reg"].forEach(i=>$(i).value="");montaCk();FPT={};montaFp();FT="";$("fz").value=1;$("fx").value=50;$("fy").value=50;ajFoto();EDIT=null;$("ftit").textContent="Novo aluno";$("btnsalvar").textContent="Cadastrar e gerar código";$("msg").textContent=""}
 W("escolheFoto",async()=>{FT=await reduzir($("foto").files[0]);ajFoto()});
 W("ajFoto",()=>{$("fprev").innerHTML=FT?foto({foto:FT,fz:$("fz").value,fx:$("fx").value,fy:$("fy").value},"fprevin"):""});
 const qa=v=>esc(v||"").replace(/"/g,"&quot;");
 function desenhaEsc(){
+  const cl=(id,v)=>`<select id="${id}">${[7,8,9,10,11,12].map(n=>`<option value="${n}" ${n==v?"selected":""}>${n}.ª</option>`).join("")}</select>`;
   $("trbox").innerHTML=ESC.trim.map((t,i)=>`<div class="row2"><div><label>${i+1}.º Trim. – início</label><input type="date" id="ti${i}" value="${t.ini}"></div><div><label>fim</label><input type="date" id="tf${i}" value="${t.fim}"></div></div>`).join("");
-  $("prbox").innerHTML=ESC.provas.map((p,i)=>`<div class="card" style="padding:10px"><label>Nome</label><input id="pn${i}" value="${qa(p.nome)}"><div class="row2"><div><label>Início</label><input type="date" id="pi${i}" value="${p.ini}"></div><div><label>Fim (último aluno)</label><input type="date" id="pf${i}" value="${p.fim}"></div></div><button onclick="delProva(${i})">Remover</button></div>`).join("")}
-function lerEsc(){ESC.trim=ESC.trim.map((t,i)=>({ini:$("ti"+i).value,fim:$("tf"+i).value}));ESC.provas=ESC.provas.map((p,i)=>({id:p.id,nome:$("pn"+i).value.trim(),ini:$("pi"+i).value,fim:$("pf"+i).value}))}
-W("addProva",()=>{lerEsc();ESC.provas.push({id:"p"+Date.now(),nome:"Provas do "+(ESC.provas.length+1)+".º Trimestre",ini:"",fim:""});desenhaEsc()});
+  $("prbox").innerHTML=ESC.provas.map((p,i)=>`<div class="card" style="padding:10px"><label>Nome</label><input id="pn${i}" value="${qa(p.nome)}"><label>Área</label><select id="pa${i}">${["Todas",...ESC.areas].map(x=>`<option ${(p.area||"Todas")===x?"selected":""}>${esc(x)}</option>`).join("")}</select><div class="row2"><div><label>Da classe</label>${cl("pc1"+i,p.c1||7)}</div><div><label>Até à classe</label>${cl("pc2"+i,p.c2||12)}</div></div><div class="row2"><div><label>Início</label><input type="date" id="pi${i}" value="${p.ini}"></div><div><label>Fim (último dia)</label><input type="date" id="pf${i}" value="${p.fim}"></div></div><button onclick="delProva(${i})">Remover</button></div>`).join("")}
+function lerEsc(){ESC.trim=ESC.trim.map((t,i)=>({ini:$("ti"+i).value,fim:$("tf"+i).value}));ESC.provas=ESC.provas.map((p,i)=>({id:p.id,nome:$("pn"+i).value.trim(),area:$("pa"+i).value,c1:Number($("pc1"+i).value),c2:Number($("pc2"+i).value),ini:$("pi"+i).value,fim:$("pf"+i).value}))}
+W("addProva",()=>{lerEsc();ESC.provas.push({id:"p"+Date.now(),nome:"Provas do "+(ESC.provas.length+1)+".º Trimestre",area:"Todas",c1:7,c2:12,ini:"",fim:""});desenhaEsc()});
 W("delProva",i=>{lerEsc();ESC.provas.splice(i,1);desenhaEsc()});
 const reduzirLogo=f=>new Promise(res=>{if(!f)return res("");const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,300/im.width),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)});
 function prevL(){$("prevl").innerHTML=ESC.logo?`<img class="logo" src="${ESC.logo}" alt="">`:""}
 W("salvarEscola",async()=>{
-  lerEsc();const logo=await reduzirLogo($("logof").files[0]);
-  ESC={...ESC,nome:$("escnome").value.trim(),polo:$("escpolo").value.trim(),ano:$("escano").value.trim()||ANO,logo:logo||ESC.logo||""};
-  try{await setDoc(doc(db,"config","escola"),ESC);$("emsg").textContent="Guardado.";$("logof").value="";prevL();montaCk();montaFp()}catch(e){$("emsg").textContent="Erro ao guardar."}
+  const logo=await reduzirLogo($("logof").files[0]);
+  const ar=$("escareas").value.split(",").map(x=>x.trim()).filter(Boolean);
+  ESC={...ESC,nome:$("escnome").value.trim(),polo:$("escpolo").value.trim(),areas:ar.length?ar:AREAS0,logo:logo||ESC.logo||""};
+  try{await setDoc(doc(db,"config","escola"),ESC);$("emsg").textContent="Guardado.";$("logof").value="";prevL();montaAreas();desenhaEsc();montaFp()}catch(e){$("emsg").textContent="Erro ao guardar."}
+});
+W("sincTodos",async()=>{$("emsg").textContent="A atualizar…";try{for(const a of alunos)await sinc(a);$("emsg").textContent="Cartões atualizados: "+alunos.length}catch(e){$("emsg").textContent="Erro. Verifique as regras do Firestore."}});
+W("salvarCal",async()=>{
+  lerEsc();ESC.ano=$("escano").value.trim()||ANO;ESC.ini=$("aini").value;ESC.fim=$("afim").value;
+  try{await setDoc(doc(db,"config","escola"),ESC);$("cmsg").textContent="Calendário guardado. Os cartões já usam as novas datas.";montaCk();montaFp()}catch(e){$("cmsg").textContent="Erro ao guardar."}
 });
 W("salvar",async()=>{
   const n=$("nome").value.trim(),cu=$("curso").value.trim();
   if(!n||!cu){$("msg").textContent="Preencha nome e curso.";return}
   $("msg").textContent="A guardar…";
   const ant=EDIT?alunos.find(x=>x.codigo===EDIT):null;
-  const fp={};ESC.provas.forEach((p,i)=>{fp[p.id]=!!($("fp"+i)&&$("fp"+i).checked)});
-  const a={...(ant||{codigo:novoCodigo(),ativo:true,ano:ESC.ano||ANO,criado:new Date().toISOString()}),nome:n,classe:$("classe").value,idade:Number($("idade").value)||0,curso:cu,turno:$("turno").value,reg:$("reg").value.trim(),pt:ESC.trim.map((_,i)=>$("pm"+i).checked),fp,foto:FT,fz:Number($("fz").value),fx:Number($("fx").value),fy:Number($("fy").value)};
-  try{await setDoc(doc(db,"students",a.codigo),a)}catch(e){$("msg").textContent="Erro ao guardar. Verifique as regras do Firestore.";return}
+  const a={...(ant||{codigo:novoCodigo(),ativo:true,ano:ESC.ano||ANO,criado:new Date().toISOString()}),nome:n,classe:$("classe").value,idade:Number($("idade").value)||0,curso:cu,turno:$("turno").value,reg:$("reg").value.trim(),pt:ESC.trim.map((_,i)=>$("pm"+i).checked),fp:FPT,area:$("area").value,foto:FT,fz:Number($("fz").value),fx:Number($("fx").value),fy:Number($("fy").value)};
+  try{await setDoc(doc(db,"students",a.codigo),a);await sinc(a)}catch(e){$("msg").textContent="Erro ao guardar. Verifique as regras do Firestore.";return}
   if(ant)Object.assign(ant,a);else alunos.push(a);
   limparForm();lista();tab(2);if(!ant)cartao(a.codigo)
 });
 W("editar",cod=>{
   const a=alunos.find(x=>x.codigo===cod);if(!a)return;
-  EDIT=cod;$("nome").value=a.nome;$("classe").value=a.classe;$("idade").value=a.idade||"";$("curso").value=a.curso;$("turno").value=a.turno;$("reg").value=a.reg||"";montaCk(a.pt);montaFp(a.fp);
+  EDIT=cod;$("nome").value=a.nome;$("classe").value=a.classe;$("idade").value=a.idade||"";$("curso").value=a.curso;$("turno").value=a.turno;$("reg").value=a.reg||"";montaCk(a.pt);FPT={...(a.fp||{})};$("area").value=a.area||"";montaFp();
   FT=a.foto||"";$("fz").value=a.fz||1;$("fx").value=a.fx??50;$("fy").value=a.fy??50;ajFoto();
   $("ftit").textContent="Editar aluno";$("btnsalvar").textContent="Guardar alterações";fechar();tab(3)
 });
 const ficha=a=>{const p=a.pt||[];
   const lin=(k,v)=>`<div class="pr"><span>${k}</span><b>${esc(v)}</b></div>`;
   return `<div style="text-align:center"><img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Consulta QR Code</div>${a.foto?foto(a,"big mx"):""}<div class="nm" style="font-size:18px">${esc(a.nome)}</div><div class="mt">Registo Académico: <b>${esc(a.reg||a.codigo)}</b></div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ATIVO":"BLOQUEADO"}</div></div>${avisos(a)}
-  <div class="nm" style="margin-top:14px">Dados Académicos</div>${lin("Classe",a.classe)}${lin("Ciclo",ciclo(a.classe))}${lin("Curso",a.curso)}${lin("Turno",a.turno)}${lin("Idade",a.idade?a.idade+" anos":"—")}${lin("Ano Letivo",a.ano)}${lin("Polo",ESC.polo||"—")}
+  <div class="nm" style="margin-top:14px">Dados Académicos</div>${lin("Classe",a.classe)}${lin("Ciclo",ciclo(a.classe))}${lin("Área",a.area||"—")}${lin("Curso",a.curso)}${lin("Turno",a.turno)}${lin("Idade",a.idade?a.idade+" anos":"—")}${lin("Ano Letivo",a.ano)}${lin("Polo",ESC.polo||"—")}
   <div class="nm" style="margin-top:14px">Situação Financeira</div>${(ESC.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre<br><span class="mt">${dd(t.ini)} – ${dd(t.fim)}</span></span><b class="${p[i]?"pg":"np"}">${p[i]?"Pago":"Não pago"}</b></div>`).join("")}`};
 W("lista",()=>{
   const q=$("q").value.toLowerCase();let h="";
@@ -233,14 +261,14 @@ W("lista",()=>{
 });
 W("cartao",cod=>{
   const a=alunos.find(x=>x.codigo===cod);if(!a)return;
-  const qr=qrcode(0,"M");qr.addData(a.codigo);qr.make();
+  const qr=qrcode(0,"M");qr.addData(urlCartao(a.codigo));qr.make();
   $("cartao").innerHTML=`<div class="bn"></div><div class="bd">${foto(a,"fo")}<div style="font-weight:700;margin-top:6px">${esc(a.nome)}</div><div>${qr.createSvgTag(4,0)}</div><div class="cd" style="font-size:22px;color:#2b4a8f">${esc(a.codigo)}</div>${avisos(a)}</div><div class="gv">Ano letivo ${esc(a.ano)}</div>`;
   $("acoes").innerHTML=`<button onclick="alternar('${a.codigo}')">${a.ativo?"Bloquear código":"Reativar código"}</button><button onclick="editar('${a.codigo}')">Editar</button>`;
   $("modal").classList.remove("hide")
 });
 W("alternar",async cod=>{
   const a=alunos.find(x=>x.codigo===cod);a.ativo=!a.ativo;
-  await updateDoc(doc(db,"students",cod),{ativo:a.ativo});lista();cartao(cod)
+  await updateDoc(doc(db,"students",cod),{ativo:a.ativo});await sinc(a);lista();cartao(cod)
 });
 W("fechar",()=>$("modal").classList.add("hide"));
 
@@ -264,7 +292,7 @@ W("scan",async()=>{
   try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})}catch(e){$("res").innerHTML='<p class="mt">Sem acesso à câmara.</p>';return}
   const v=$("vid");v.srcObject=stream;v.classList.remove("hide");await v.play();rodando=true;
   const det=new BarcodeDetector({formats:["qr_code"]});
-  const loop=async()=>{if(!rodando)return;try{const r=await det.detect(v);if(r.length){verificar(r[0].rawValue);return}}catch(e){}setTimeout(loop,250)};loop()
+  const loop=async()=>{if(!rodando)return;try{const r=await det.detect(v);if(r.length){verificar(codDe(r[0].rawValue));return}}catch(e){}setTimeout(loop,250)};loop()
 });
 function parar(){rodando=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("vid").classList.add("hide")}
 
@@ -276,6 +304,20 @@ W("relatorio",async()=>{
   $("rel").innerHTML=`<div class="card"><div class="mt">Entradas em ${esc(d)}</div><div style="font-size:36px;font-weight:700">${es.length}</div><div class="mt">alunos de ${alunos.length} cadastrados</div></div>`+
     bloco("Por turma (mais alunos primeiro)",grupo(e=>`${e.classe} ${e.curso} · ${e.turno}`))+bloco("Por curso",grupo(e=>e.curso))+bloco("Por turno",grupo(e=>e.turno))
 });
+
+const PC=new URLSearchParams(location.search).get("c");
+if(PC){(async()=>{
+  document.querySelector(".top").classList.add("hide");$("login").classList.add("hide");$("pub").classList.remove("hide");
+  $("pub").innerHTML='<p class="mt" style="text-align:center">A carregar…</p>';
+  try{
+    try{const e=await getDoc(doc(db,"config","escola"));if(e.exists())ESC={...ESC,...e.data()}}catch(e){}
+    const s=await getDoc(doc(db,"cartoes",PC.toUpperCase()));
+    const cab=`<img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Cartão de Estudante Digital</div>`;
+    if(!s.exists()){$("pub").innerHTML=`<div class="card" style="text-align:center">${cab}<div class="nm bad" style="margin-top:10px">Cartão não encontrado</div></div>`;return}
+    const a=s.data(),lin=(k,v)=>`<div class="pr"><span>${k}</span><b>${esc(v)}</b></div>`;
+    $("pub").innerHTML=`<div class="card" style="text-align:center">${cab}${foto(a,"big mx")}<div class="nm" style="font-size:20px">${esc(a.nome)}</div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ATIVO":"BLOQUEADO"}</div></div><div class="card">${lin("Classe",a.classe)}${a.area?lin("Área",a.area):""}${lin("Curso",a.curso)}${lin("Turno",a.turno)}${avisos(a)}</div>`
+  }catch(e){$("pub").innerHTML='<div class="card" style="text-align:center"><div class="nm bad">Não foi possível carregar o cartão.</div></div>'}
+})()}
 </script>
 </body>
 </html>
