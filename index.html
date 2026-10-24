@@ -39,7 +39,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 </head>
 <body>
 <div class="w">
-<div class="top"><div class="row"><img class="hl lg" alt=""><h1>Controlo de Acesso</h1></div><button id="sair" class="hide" onclick="sair()">Sair</button></div>
+<div class="top"><div class="row"><img class="hl lg" alt=""><div><h1>Controlo de Acesso</h1><div id="quem" style="color:#cfe0ff;font-size:12px"></div></div></div><button id="sair" class="hide" onclick="sair()">Sair</button></div>
 
 <div id="pub" class="hide"></div>
 
@@ -59,6 +59,8 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <button id="t4" onclick="tab(4)">Relatório</button>
     <button id="t6" onclick="tab(6)">Calendário</button>
     <button id="t5" onclick="tab(5)">Escola</button>
+    <button id="t7" onclick="tab(7)">Aprovação</button>
+    <button id="t8" onclick="tab(8)">Painel</button>
   </div>
 
   <div id="v1">
@@ -84,6 +86,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
       <div><label>Classe</label><select id="classe" onchange="montaFp()"><option>7.ª</option><option>8.ª</option><option>9.ª</option><option>10.ª</option><option>11.ª</option><option>12.ª</option><option>13.ª</option></select></div>
       <div><label>Idade</label><input id="idade" type="number" min="10" max="40"></div>
     </div>
+    <label>Turma</label><input id="turma" placeholder="Ex.: A">
     <label>Área</label><select id="area" onchange="montaFp()"></select>
     <label>Curso</label><input id="curso" placeholder="Informática, Eletricidade…">
     <label>Turno</label><select id="turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select>
@@ -92,8 +95,8 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <label>Zoom</label><input class="sl" id="fz" type="range" min="1" max="3" step="0.05" value="1" oninput="ajFoto()">
     <label>Posição horizontal</label><input class="sl" id="fx" type="range" min="0" max="100" value="50" oninput="ajFoto()">
     <label>Posição vertical</label><input class="sl" id="fy" type="range" min="0" max="100" value="50" oninput="ajFoto()">
-    <div class="nm" style="margin:4px 0 8px">Comparticipação (por trimestre)</div><div class="ck" id="ck" style="grid-template-columns:1fr"></div>
-    <div class="nm" style="margin:4px 0 8px">Folhas de prova pagas (7.ª a 12.ª)</div><div class="ck" id="fpck" style="grid-template-columns:1fr"></div>
+    <div id="blkpag"><div class="nm" style="margin:4px 0 8px">Comparticipação (por trimestre)</div><div class="ck" id="ck" style="grid-template-columns:1fr"></div>
+    <div class="nm" style="margin:4px 0 8px">Folhas de prova pagas (7.ª a 12.ª)</div><div class="ck" id="fpck" style="grid-template-columns:1fr"></div></div>
     <button class="p" id="btnsalvar" style="width:100%" onclick="salvar()">Cadastrar e gerar código</button>
     <p class="mt" id="msg"></p>
   </div></div>
@@ -103,6 +106,16 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <div id="rel"></div>
   </div>
 
+  <div id="v7" class="hide"><div class="card">
+    <div class="nm" style="margin-bottom:6px">Calendário para aprovação</div>
+    <div id="apv"></div>
+    <label>Motivo (se rejeitar)</label><input id="motivo">
+    <div class="g2"><button class="p" onclick="aprovar(true)">Aprovar</button><button onclick="aprovar(false)">Rejeitar</button></div>
+    <p class="mt" id="amsg"></p>
+  </div></div>
+
+  <div id="v8" class="hide"><div id="pnl"></div></div>
+
   <div id="v6" class="hide"><div class="card">
     <div class="nm" style="margin-bottom:6px">Ano letivo (definido pela secretaria)</div>
     <label>Ano letivo</label><input id="escano" placeholder="2026/27">
@@ -111,7 +124,8 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <div class="nm" style="margin:12px 0 4px">Provas por área e classe</div>
     <p class="mt">O aviso da folha de prova aparece 14 dias antes do início e desaparece depois do fim. Ponha como fim o último dia de prova da área.</p>
     <div id="prbox"></div><button onclick="addProva()" style="width:100%;margin-bottom:10px">+ Adicionar período de provas</button>
-    <button class="p" style="width:100%" onclick="salvarCal()">Guardar calendário</button>
+    <p class="mt" id="cest"></p>
+    <div class="g2"><button onclick="guardarRas()">Guardar rascunho</button><button class="p" onclick="enviarRas()">Enviar ao diretor</button></div>
     <p class="mt" id="cmsg"></p>
   </div></div>
 
@@ -164,22 +178,41 @@ W("entrar",async()=>{
   catch(e){$("lerr").textContent="E-mail ou senha incorretos."}
 });
 W("sair",()=>signOut(auth));
-onAuthStateChanged(auth,u=>{
+const ROT={admin:"Administrador",secretaria:"Secretaria",diretor:"Diretor",coordenador:"Coordenação",seguranca:"Segurança"};
+const TABS={admin:[1,2,3,4,6,7,5],secretaria:[2,3,6,4],diretor:[7,4],coordenador:[8,2],seguranca:[1]};
+onAuthStateChanged(auth,async u=>{
   if(new URLSearchParams(location.search).get("c"))return;
-  $("login").classList.toggle("hide",!!u);$("app").classList.toggle("hide",!u);$("sair").classList.toggle("hide",!u);
-  if(u){$("dia").value=hoje();carregar()}
+  if(!u){ME=null;$("login").classList.remove("hide");$("app").classList.add("hide");$("sair").classList.add("hide");return}
+  try{const r=await getDoc(doc(db,"users",u.uid));ME=r.exists()?r.data():null}catch(e){ME=null}
+  if(!ME||!TABS[ME.role]){$("lerr").textContent="Esta conta ainda não tem perfil. Fale com o administrador.";await signOut(auth);return}
+  $("login").classList.add("hide");$("app").classList.remove("hide");$("sair").classList.remove("hide");
+  $("quem").textContent=(ME.nome?ME.nome+" · ":"")+ROT[ME.role]+(ME.area?" · "+ME.area:"");
+  $("dia").value=hoje();await carregar();
+  const box=document.querySelector(".tabs");for(let k=1;k<=8;k++)$("t"+k).classList.add("hide");
+  TABS[ME.role].forEach(k=>{const b=$("t"+k);b.classList.remove("hide");box.appendChild(b)});tab(TABS[ME.role][0])
 });
 W("tab",n=>{
-  if(n!==3&&EDIT)limparForm();for(let i=1;i<=6;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
-  if(n!==1)parar();if(n===4)relatorio()
+  if(n!==3&&EDIT)limparForm();for(let i=1;i<=8;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
+  if(n!==1)parar();if(n===4)relatorio();if(n===7)aprov();if(n===8)painel()
 });
 
 async function carregar(){
-  const s=await getDocs(collection(db,"students"));
-  alunos=s.docs.map(d=>d.data()).sort((a,b)=>a.nome.localeCompare(b.nome));lista();
-  try{const e=await getDoc(doc(db,"config","escola"));if(e.exists())ESC=e.data()}catch(e){}
-  ESC.trim=ESC.trim||TRIM0;ESC.provas=ESC.provas||[];ESC.ano=ESC.ano||ANO;ESC.areas=ESC.areas||AREAS0;ESC.ini=ESC.ini||"2026-09-01";ESC.fim=ESC.fim||"2027-06-30";
-  $("escnome").value=ESC.nome||"";$("escpolo").value=ESC.polo||"";$("escano").value=ESC.ano;$("escareas").value=ESC.areas.join(", ");$("aini").value=ESC.ini;$("afim").value=ESC.fim;montaAreas();desenhaEsc();montaCk();montaFp();prevL()
+  let E={},C=null;
+  try{const e=await getDoc(doc(db,"config","escola"));if(e.exists())E=e.data()}catch(e){}
+  try{const c=await getDoc(doc(db,"config","calendario"));if(c.exists())C=c.data()}catch(e){}
+  const b=C||E;
+  ESC={nome:"",polo:"",logo:"",...E,areas:E.areas||AREAS0,ano:b.ano||ANO,ini:b.ini||"2026-09-01",fim:b.fim||"2027-06-30",trim:b.trim||TRIM0,provas:b.provas||[]};
+  RAS=null;
+  if(["secretaria","diretor","admin"].includes(ME.role)){try{const r=await getDoc(doc(db,"config","rascunho"));if(r.exists())RAS=r.data()}catch(e){}}
+  if(!RAS)RAS={ano:ESC.ano,ini:ESC.ini,fim:ESC.fim,trim:JSON.parse(JSON.stringify(ESC.trim)),provas:JSON.parse(JSON.stringify(ESC.provas)),estado:"aprovado"};
+  try{
+    if(ME.role==="coordenador")alunos=(await getDocs(query(collection(db,"students"),where("area","==",ME.area)))).docs.map(d=>d.data());
+    else if(["admin","secretaria"].includes(ME.role))alunos=(await getDocs(collection(db,"students"))).docs.map(d=>d.data());
+    else alunos=[];
+  }catch(e){alunos=[]}
+  alunos.sort((a,b)=>a.nome.localeCompare(b.nome));
+  $("escnome").value=ESC.nome||"";$("escpolo").value=ESC.polo||"";$("escareas").value=ESC.areas.join(", ");
+  montaAreas();desenhaEsc();montaCk();montaFp();prevL();lista();estadoCal()
 }
 function novoCodigo(){let c;do{c="";for(let i=0;i<6;i++)c+=AB[Math.floor(Math.random()*AB.length)]}while(alunos.some(a=>a.codigo===c));return c}
 const reduzir=f=>new Promise(res=>{
@@ -200,24 +233,25 @@ const dias=(d,n)=>{const x=new Date(d+"T00:00:00");x.setDate(x.getDate()+n);retu
 const aplica=(p,area,n)=>(!p.area||p.area==="Todas"||p.area===area)&&n>=(p.c1||7)&&n<=(p.c2||12);
 const avisos=a=>{const n=parseInt(a.classe);if(n<7||n>12)return"";const h=hoje();
   return (ESC.provas||[]).filter(p=>aplica(p,a.area,n)&&p.ini&&p.fim&&h>=dias(p.ini,-14)&&h<=p.fim).map(p=>{const ok=a.fp&&a.fp[p.id];return `<div class="al ${ok?"g":"r"}">${ok?"✔ Folha de prova paga":"⚠ Folha de prova NÃO paga"}<small>${esc(p.nome)} · ${dd(p.ini)} a ${dd(p.fim)}</small></div>`}).join("")};
-let EDIT=null,FT="",FPT={},ESC={nome:"",polo:"",logo:"",ano:ANO,ini:"",fim:"",areas:AREAS0,trim:TRIM0,provas:[]};
+let EDIT=null,FT="",FPT={},RAS=null,ME=null,ESC={nome:"",polo:"",logo:"",ano:ANO,ini:"",fim:"",areas:AREAS0,trim:TRIM0,provas:[]};
 const ciclo=c=>parseInt(c)<=9?"1.º Ciclo":"2.º Ciclo";
 function montaCk(p){$("ck").innerHTML=ESC.trim.map((t,i)=>`<label><input type="checkbox" id="pm${i}" ${p&&p[i]?"checked":""}>${i+1}.º Trimestre (${dd(t.ini)} – ${dd(t.fim)})</label>`).join("")}
 function montaFp(){const ar=$("area").value,n=parseInt($("classe").value);const l=ESC.provas.filter(p=>aplica(p,ar,n));$("fpck").innerHTML=l.length?l.map(p=>`<label><input type="checkbox" ${FPT[p.id]?"checked":""} onchange="setFp('${p.id}',this.checked)">${esc(p.nome)}</label>`).join(""):'<span class="mt">Sem provas para esta área e classe (veja a aba Calendário).</span>'}
 W("setFp",(id,v)=>{FPT[id]=v});
 function montaAreas(){const v=$("area").value;$("area").innerHTML=ESC.areas.map(x=>`<option>${esc(x)}</option>`).join("");if(v)$("area").value=v}
 montaCk();
-function limparForm(){["nome","idade","curso","foto","reg"].forEach(i=>$(i).value="");montaCk();FPT={};montaFp();FT="";$("fz").value=1;$("fx").value=50;$("fy").value=50;ajFoto();EDIT=null;$("ftit").textContent="Novo aluno";$("btnsalvar").textContent="Cadastrar e gerar código";$("msg").textContent=""}
+function limparForm(){["nome","idade","curso","foto","reg","turma"].forEach(i=>$(i).value="");["nome","reg","idade","curso","area","turno"].forEach(i=>$(i).disabled=false);$("blkpag").classList.remove("hide");montaCk();FPT={};montaFp();FT="";$("fz").value=1;$("fx").value=50;$("fy").value=50;ajFoto();EDIT=null;$("ftit").textContent="Novo aluno";$("btnsalvar").textContent="Cadastrar e gerar código";$("msg").textContent=""}
 W("escolheFoto",async()=>{FT=await reduzir($("foto").files[0]);ajFoto()});
 W("ajFoto",()=>{$("fprev").innerHTML=FT?foto({foto:FT,fz:$("fz").value,fx:$("fx").value,fy:$("fy").value},"fprevin"):""});
 const qa=v=>esc(v||"").replace(/"/g,"&quot;");
 function desenhaEsc(){
+  $("escano").value=RAS.ano||"";$("aini").value=RAS.ini||"";$("afim").value=RAS.fim||"";
   const cl=(id,v)=>`<select id="${id}">${[7,8,9,10,11,12].map(n=>`<option value="${n}" ${n==v?"selected":""}>${n}.ª</option>`).join("")}</select>`;
-  $("trbox").innerHTML=ESC.trim.map((t,i)=>`<div class="row2"><div><label>${i+1}.º Trim. – início</label><input type="date" id="ti${i}" value="${t.ini}"></div><div><label>fim</label><input type="date" id="tf${i}" value="${t.fim}"></div></div>`).join("");
-  $("prbox").innerHTML=ESC.provas.map((p,i)=>`<div class="card" style="padding:10px"><label>Nome</label><input id="pn${i}" value="${qa(p.nome)}"><label>Área</label><select id="pa${i}">${["Todas",...ESC.areas].map(x=>`<option ${(p.area||"Todas")===x?"selected":""}>${esc(x)}</option>`).join("")}</select><div class="row2"><div><label>Da classe</label>${cl("pc1"+i,p.c1||7)}</div><div><label>Até à classe</label>${cl("pc2"+i,p.c2||12)}</div></div><div class="row2"><div><label>Início</label><input type="date" id="pi${i}" value="${p.ini}"></div><div><label>Fim (último dia)</label><input type="date" id="pf${i}" value="${p.fim}"></div></div><button onclick="delProva(${i})">Remover</button></div>`).join("")}
-function lerEsc(){ESC.trim=ESC.trim.map((t,i)=>({ini:$("ti"+i).value,fim:$("tf"+i).value}));ESC.provas=ESC.provas.map((p,i)=>({id:p.id,nome:$("pn"+i).value.trim(),area:$("pa"+i).value,c1:Number($("pc1"+i).value),c2:Number($("pc2"+i).value),ini:$("pi"+i).value,fim:$("pf"+i).value}))}
-W("addProva",()=>{lerEsc();ESC.provas.push({id:"p"+Date.now(),nome:"Provas do "+(ESC.provas.length+1)+".º Trimestre",area:"Todas",c1:7,c2:12,ini:"",fim:""});desenhaEsc()});
-W("delProva",i=>{lerEsc();ESC.provas.splice(i,1);desenhaEsc()});
+  $("trbox").innerHTML=RAS.trim.map((t,i)=>`<div class="row2"><div><label>${i+1}.º Trim. – início</label><input type="date" id="ti${i}" value="${t.ini}"></div><div><label>fim</label><input type="date" id="tf${i}" value="${t.fim}"></div></div>`).join("");
+  $("prbox").innerHTML=RAS.provas.map((p,i)=>`<div class="card" style="padding:10px"><label>Nome</label><input id="pn${i}" value="${qa(p.nome)}"><label>Área</label><select id="pa${i}">${["Todas",...ESC.areas].map(x=>`<option ${(p.area||"Todas")===x?"selected":""}>${esc(x)}</option>`).join("")}</select><div class="row2"><div><label>Da classe</label>${cl("pc1"+i,p.c1||7)}</div><div><label>Até à classe</label>${cl("pc2"+i,p.c2||12)}</div></div><div class="row2"><div><label>Início</label><input type="date" id="pi${i}" value="${p.ini}"></div><div><label>Fim (último dia)</label><input type="date" id="pf${i}" value="${p.fim}"></div></div><button onclick="delProva(${i})">Remover</button></div>`).join("")}
+function lerEsc(){RAS.trim=RAS.trim.map((t,i)=>({ini:$("ti"+i).value,fim:$("tf"+i).value}));RAS.provas=RAS.provas.map((p,i)=>({id:p.id,nome:$("pn"+i).value.trim(),area:$("pa"+i).value,c1:Number($("pc1"+i).value),c2:Number($("pc2"+i).value),ini:$("pi"+i).value,fim:$("pf"+i).value}))}
+W("addProva",()=>{lerEsc();RAS.provas.push({id:"p"+Date.now(),nome:"Provas do "+(RAS.provas.length+1)+".º Trimestre",area:"Todas",c1:7,c2:12,ini:"",fim:""});desenhaEsc()});
+W("delProva",i=>{lerEsc();RAS.provas.splice(i,1);desenhaEsc()});
 const reduzirLogo=f=>new Promise(res=>{if(!f)return res("");const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,300/im.width),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)});
 function prevL(){$("prevl").innerHTML=ESC.logo?`<img class="logo" src="${ESC.logo}" alt="">`:""}
 W("salvarEscola",async()=>{
@@ -227,43 +261,75 @@ W("salvarEscola",async()=>{
   try{await setDoc(doc(db,"config","escola"),ESC);$("emsg").textContent="Guardado.";$("logof").value="";prevL();montaAreas();desenhaEsc();montaFp()}catch(e){$("emsg").textContent="Erro ao guardar."}
 });
 W("sincTodos",async()=>{$("emsg").textContent="A atualizar…";try{for(const a of alunos)await sinc(a);$("emsg").textContent="Cartões atualizados: "+alunos.length}catch(e){$("emsg").textContent="Erro. Verifique as regras do Firestore."}});
-W("salvarCal",async()=>{
-  lerEsc();ESC.ano=$("escano").value.trim()||ANO;ESC.ini=$("aini").value;ESC.fim=$("afim").value;
-  try{await setDoc(doc(db,"config","escola"),ESC);$("cmsg").textContent="Calendário guardado. Os cartões já usam as novas datas.";montaCk();montaFp()}catch(e){$("cmsg").textContent="Erro ao guardar."}
+async function guardaRas(est){
+  lerEsc();RAS.ano=$("escano").value.trim()||ANO;RAS.ini=$("aini").value;RAS.fim=$("afim").value;RAS.estado=est;RAS.motivo="";RAS.por=ME.nome||"";RAS.em=new Date().toISOString();
+  try{await setDoc(doc(db,"config","rascunho"),RAS);$("cmsg").textContent=est==="pendente"?"Enviado ao diretor para aprovação.":"Rascunho guardado.";estadoCal()}catch(e){$("cmsg").textContent="Erro ao guardar."}
+}
+W("guardarRas",()=>guardaRas("rascunho"));W("enviarRas",()=>guardaRas("pendente"));
+function estadoCal(){if(!$("cest")||!RAS)return;const e=RAS.estado||"aprovado";$("cest").innerHTML={rascunho:"Estado: rascunho (ainda não enviado)",pendente:"Estado: <b>pendente</b> — à espera da aprovação do diretor",aprovado:"Estado: <b class='ok'>aprovado</b>",rejeitado:"Estado: <b class='bad'>rejeitado</b> — "+esc(RAS.motivo||"sem motivo indicado")}[e]||""}
+function aprov(){if(!$("apv")||!RAS)return;
+  const pr=(RAS.provas||[]).map(p=>`<div class="pr"><span>${esc(p.nome)}<br><span class="mt">${esc(p.area||"Todas")} · ${p.c1||7}.ª a ${p.c2||12}.ª</span></span><b>${dd(p.ini)} – ${dd(p.fim)}</b></div>`).join("")||'<p class="mt">Sem provas.</p>';
+  const tr=(RAS.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre</span><b>${dd(t.ini)} – ${dd(t.fim)}</b></div>`).join("");
+  $("apv").innerHTML=`<p class="mt">Estado: <b>${esc(RAS.estado||"aprovado")}</b>${RAS.por?" · enviado por "+esc(RAS.por):""}</p><div class="pr"><span>Ano letivo ${esc(RAS.ano||"")}</span><b>${dd(RAS.ini)} – ${dd(RAS.fim)}</b></div>${tr}<div class="nm" style="margin-top:10px">Provas</div>${pr}`}
+W("aprovar",async ok=>{
+  if(!RAS||RAS.estado!=="pendente"){$("amsg").textContent="Não há calendário pendente.";return}
+  try{
+    if(ok){const C={ano:RAS.ano,ini:RAS.ini,fim:RAS.fim,trim:RAS.trim,provas:RAS.provas,aprovadoEm:new Date().toISOString(),aprovadoPor:ME.nome||""};
+      await setDoc(doc(db,"config","calendario"),C);RAS.estado="aprovado";RAS.motivo="";await setDoc(doc(db,"config","rascunho"),RAS);
+      ESC={...ESC,...C};montaCk();montaFp();$("amsg").textContent="Calendário aprovado e publicado."}
+    else{RAS.estado="rejeitado";RAS.motivo=$("motivo").value.trim();await setDoc(doc(db,"config","rascunho"),RAS);$("amsg").textContent="Calendário rejeitado."}
+    aprov()
+  }catch(e){$("amsg").textContent="Erro (sem permissão?)."}
 });
+function painel(){if(!ME||ME.role!=="coordenador"||!$("pnl"))return;
+  const m=alunos;
+  const cl=[7,8,9,10,11,12,13].map(n=>{const x=m.filter(a=>parseInt(a.classe)===n);const t=[...new Set(x.map(a=>a.turma||"—"))];return `<div class="pr"><span>${n}.ª</span><span><b>${x.length}</b> alunos · ${t.length} turma(s)${x.length?" ("+t.map(esc).join(", ")+")":""}</span></div>`}).join("");
+  const o={};m.forEach(a=>{o[a.turno||"—"]=(o[a.turno||"—"]||0)+1});
+  const tur=Object.entries(o).map(([k,v])=>`<div class="pr"><span>${esc(k)}</span><b>${v}</b></div>`).join("");
+  const rc=m.filter(a=>a.reconf);
+  $("pnl").innerHTML=`<div class="card"><div class="mt">Área</div><div class="nm" style="font-size:18px">${esc(ME.area)}</div><div style="font-size:36px;font-weight:700">${m.length}</div><div class="mt">alunos</div></div><div class="card"><div class="nm">Por classe</div>${cl}</div><div class="card"><div class="nm">Por turno</div>${tur||'<p class="mt">Sem dados.</p>'}</div><div class="card"><div class="nm">Reconfirmação de matrícula</div>${rc.length?rc.map(a=>`<div class="pr" onclick="editar('${a.codigo}')"><span>${esc(a.nome)}</span><b class="np">Atualizar</b></div>`).join(""):'<p class="mt">Nenhum aluno à espera.</p>'}</div>`}
+W("reconf",async cod=>{const a=alunos.find(x=>x.codigo===cod);a.reconf=!a.reconf;await updateDoc(doc(db,"students",cod),{reconf:a.reconf});lista();cartao(cod)});
+
 W("salvar",async()=>{
+  if(ME.role==="coordenador"){
+    const ant=alunos.find(x=>x.codigo===EDIT);if(!ant)return;
+    const up={classe:$("classe").value,turma:$("turma").value.trim(),foto:FT,fz:Number($("fz").value),fx:Number($("fx").value),fy:Number($("fy").value),reconf:false,ano:ESC.ano||ant.ano};
+    $("msg").textContent="A guardar…";
+    try{await updateDoc(doc(db,"students",ant.codigo),up);Object.assign(ant,up);await sinc(ant)}catch(e){$("msg").textContent="Erro ao guardar (sem permissão).";return}
+    limparForm();lista();painel();tab(8);return}
   const n=$("nome").value.trim(),cu=$("curso").value.trim();
   if(!n||!cu){$("msg").textContent="Preencha nome e curso.";return}
   $("msg").textContent="A guardar…";
   const ant=EDIT?alunos.find(x=>x.codigo===EDIT):null;
-  const a={...(ant||{codigo:novoCodigo(),ativo:true,ano:ESC.ano||ANO,criado:new Date().toISOString()}),nome:n,classe:$("classe").value,idade:Number($("idade").value)||0,curso:cu,turno:$("turno").value,reg:$("reg").value.trim(),pt:ESC.trim.map((_,i)=>$("pm"+i).checked),fp:FPT,area:$("area").value,foto:FT,fz:Number($("fz").value),fx:Number($("fx").value),fy:Number($("fy").value)};
+  const a={...(ant||{codigo:novoCodigo(),ativo:true,reconf:false,ano:ESC.ano||ANO,criado:new Date().toISOString()}),nome:n,classe:$("classe").value,idade:Number($("idade").value)||0,curso:cu,turno:$("turno").value,reg:$("reg").value.trim(),turma:$("turma").value.trim(),pt:ESC.trim.map((_,i)=>$("pm"+i).checked),fp:FPT,area:$("area").value,foto:FT,fz:Number($("fz").value),fx:Number($("fx").value),fy:Number($("fy").value)};
   try{await setDoc(doc(db,"students",a.codigo),a);await sinc(a)}catch(e){$("msg").textContent="Erro ao guardar. Verifique as regras do Firestore.";return}
   if(ant)Object.assign(ant,a);else alunos.push(a);
   limparForm();lista();tab(2);if(!ant)cartao(a.codigo)
 });
 W("editar",cod=>{
   const a=alunos.find(x=>x.codigo===cod);if(!a)return;
-  EDIT=cod;$("nome").value=a.nome;$("classe").value=a.classe;$("idade").value=a.idade||"";$("curso").value=a.curso;$("turno").value=a.turno;$("reg").value=a.reg||"";montaCk(a.pt);FPT={...(a.fp||{})};$("area").value=a.area||"";montaFp();
+  EDIT=cod;$("nome").value=a.nome;$("classe").value=a.classe;$("idade").value=a.idade||"";$("curso").value=a.curso;$("turno").value=a.turno;$("reg").value=a.reg||"";$("turma").value=a.turma||"";montaCk(a.pt);FPT={...(a.fp||{})};$("area").value=a.area||"";montaFp();
   FT=a.foto||"";$("fz").value=a.fz||1;$("fx").value=a.fx??50;$("fy").value=a.fy??50;ajFoto();
-  $("ftit").textContent="Editar aluno";$("btnsalvar").textContent="Guardar alterações";fechar();tab(3)
+  const co=ME.role==="coordenador";["nome","reg","idade","curso","area","turno"].forEach(i=>$(i).disabled=co);$("blkpag").classList.toggle("hide",co);$("ftit").textContent="Editar aluno";$("btnsalvar").textContent="Guardar alterações";fechar();tab(3)
 });
 const ficha=a=>{const p=a.pt||[];
   const lin=(k,v)=>`<div class="pr"><span>${k}</span><b>${esc(v)}</b></div>`;
   return `<div style="text-align:center"><img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Consulta QR Code</div>${a.foto?foto(a,"big mx"):""}<div class="nm" style="font-size:18px">${esc(a.nome)}</div><div class="mt">Registo Académico: <b>${esc(a.reg||a.codigo)}</b></div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ATIVO":"BLOQUEADO"}</div></div>${avisos(a)}
-  <div class="nm" style="margin-top:14px">Dados Académicos</div>${lin("Classe",a.classe)}${lin("Ciclo",ciclo(a.classe))}${lin("Área",a.area||"—")}${lin("Curso",a.curso)}${lin("Turno",a.turno)}${lin("Idade",a.idade?a.idade+" anos":"—")}${lin("Ano Letivo",a.ano)}${lin("Polo",ESC.polo||"—")}
-  <div class="nm" style="margin-top:14px">Situação Financeira</div>${(ESC.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre<br><span class="mt">${dd(t.ini)} – ${dd(t.fim)}</span></span><b class="${p[i]?"pg":"np"}">${p[i]?"Pago":"Não pago"}</b></div>`).join("")}`};
+  <div class="nm" style="margin-top:14px">Dados Académicos</div>${lin("Classe",a.classe)}${a.turma?lin("Turma",a.turma):""}${lin("Ciclo",ciclo(a.classe))}${lin("Área",a.area||"—")}${lin("Curso",a.curso)}${lin("Turno",a.turno)}${"idade" in a?lin("Idade",a.idade?a.idade+" anos":"—"):""}${lin("Ano Letivo",a.ano)}${lin("Polo",ESC.polo||"—")}
+  ${a.pt?`<div class="nm" style="margin-top:14px">Situação Financeira</div>`:""}${a.pt?(ESC.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre<br><span class="mt">${dd(t.ini)} – ${dd(t.fim)}</span></span><b class="${p[i]?"pg":"np"}">${p[i]?"Pago":"Não pago"}</b></div>`).join(""):""}`};
 W("lista",()=>{
   const q=$("q").value.toLowerCase();let h="";
   const f=alunos.filter(a=>(a.nome+a.codigo+a.curso+a.classe).toLowerCase().includes(q));
   if(!f.length)h='<p class="mt">Nenhum aluno encontrado.</p>';
-  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Ativo":"Bloqueado"}</div></div></div>`});
+  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Ativo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Atualizar</div>':""}</div></div>`});
   $("list").innerHTML=h
 });
 W("cartao",cod=>{
   const a=alunos.find(x=>x.codigo===cod);if(!a)return;
   const qr=qrcode(0,"M");qr.addData(urlCartao(a.codigo));qr.make();
   $("cartao").innerHTML=`<div class="bn"></div><div class="bd">${foto(a,"fo")}<div style="font-weight:700;margin-top:6px">${esc(a.nome)}</div><div>${qr.createSvgTag(4,0)}</div><div class="cd" style="font-size:22px;color:#2b4a8f">${esc(a.codigo)}</div>${avisos(a)}</div><div class="gv">Ano letivo ${esc(a.ano)}</div>`;
-  $("acoes").innerHTML=`<button onclick="alternar('${a.codigo}')">${a.ativo?"Bloquear código":"Reativar código"}</button><button onclick="editar('${a.codigo}')">Editar</button>`;
+  const ps=["admin","secretaria"].includes(ME.role);
+  $("acoes").innerHTML=(ps?`<button onclick="alternar('${a.codigo}')">${a.ativo?"Bloquear código":"Reativar código"}</button>`:"")+(ps||ME.role==="coordenador"?`<button onclick="editar('${a.codigo}')">Editar</button>`:"")+(ps?`<button onclick="reconf('${a.codigo}')">${a.reconf?"Cancelar reconfirmação":"Matrícula reconfirmada"}</button>`:"");
   $("modal").classList.remove("hide")
 });
 W("alternar",async cod=>{
@@ -275,14 +341,14 @@ W("fechar",()=>$("modal").classList.add("hide"));
 W("verificar",async(c)=>{
   const cod=(typeof c==="string"?c:$("cod").value).trim().toUpperCase();if(!cod)return;
   parar();$("res").innerHTML='<p class="mt">A verificar…</p>';
-  let a;try{const s=await getDoc(doc(db,"students",cod));a=s.exists()?s.data():null}catch(e){$("res").innerHTML='<div class="card res r bad nm">Erro de ligação.</div>';return}
+  let a;try{const s=await getDoc(doc(db,["admin","secretaria","coordenador"].includes(ME.role)?"students":"cartoes",cod));a=s.exists()?s.data():null;if(a)a.codigo=a.codigo||cod}catch(e){$("res").innerHTML='<div class="card res r bad nm">Erro de ligação.</div>';return}
   if(!a){$("res").innerHTML=`<div class="card res r"><div class="nm bad">Código não encontrado</div><div class="cd">${esc(cod)}</div></div>`;return}
   const info=ficha(a);
   if(!a.ativo){$("res").innerHTML=`<div class="card res r"><div class="nm bad" style="text-align:center">⛔ ACESSO BLOQUEADO</div>${info}</div>`;return}
   const id=hoje()+"_"+a.codigo,ref=doc(db,"entradas",id);let st;
   try{const e=await getDoc(ref);
     if(e.exists())st=`<div class="nm" style="color:#b45309">Já registado hoje às ${esc(e.data().hora)}</div>`;
-    else{await setDoc(ref,{data:hoje(),hora:hora(),codigo:a.codigo,nome:a.nome,classe:a.classe,curso:a.curso,turno:a.turno});st='<div class="nm ok">✔ Entrada registada</div>'}
+    else{await setDoc(ref,{data:hoje(),hora:hora(),codigo:a.codigo,nome:a.nome,classe:a.classe,curso:a.curso,turno:a.turno,area:a.area||""});st='<div class="nm ok">✔ Entrada registada</div>'}
   }catch(e){st='<div class="nm bad">Não foi possível registar</div>'}
   $("res").innerHTML=`<div class="card res g">${st}${info}</div>`;$("cod").value=""
 });
@@ -311,6 +377,7 @@ if(PC){(async()=>{
   $("pub").innerHTML='<p class="mt" style="text-align:center">A carregar…</p>';
   try{
     try{const e=await getDoc(doc(db,"config","escola"));if(e.exists())ESC={...ESC,...e.data()}}catch(e){}
+    try{const c=await getDoc(doc(db,"config","calendario"));if(c.exists())ESC={...ESC,...c.data()}}catch(e){}
     const s=await getDoc(doc(db,"cartoes",PC.toUpperCase()));
     const cab=`<img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Cartão de Estudante Digital</div>`;
     if(!s.exists()){$("pub").innerHTML=`<div class="card" style="text-align:center">${cab}<div class="nm bad" style="margin-top:10px">Cartão não encontrado</div></div>`;return}
