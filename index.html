@@ -37,12 +37,28 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 #login{max-width:420px;margin:24px auto}
 #v1>.card,#v3>.card,#v5>.card,#res{max-width:760px}#q{max-width:520px}#dia{max-width:260px}
 #list,#rel,#pnl,.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
+.area-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:8px 0 12px}.area-btn{text-align:left;min-height:54px;font-weight:600}.area-btn small{display:block;font-weight:400;color:var(--mut);font-size:12px}.filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.filters>div{min-width:0}
+#printArea{display:none}
 #list .card,#rel .card,#pnl .card,.cols .card{margin:0}
 .gh{grid-column:1/-1;font-weight:700;color:var(--pri);border-bottom:2px solid var(--acc);padding:6px 0;margin-top:6px}
 #trbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px}
 #prbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}#prbox .card{margin:0}
 .cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-top:8px}.cols3 .card{margin:0}
-@media print{body *{visibility:hidden}.cardd,.cardd *{visibility:visible}.cardd{position:absolute;left:0;top:0}}
+@media print{
+  @page{size:A4 portrait;margin:7mm}
+  body{background:#fff!important;padding:0!important}
+  body *{visibility:hidden!important}
+  #printArea,#printArea *{visibility:visible!important}
+  #printArea{display:grid!important;position:absolute;left:0;top:0;width:196mm;grid-template-columns:repeat(2,63mm);grid-auto-rows:88mm;gap:5mm 8mm;justify-content:center;align-content:start}
+  .print-card{width:63mm;height:88mm;border:1px solid #888;border-radius:4mm;overflow:hidden;text-align:center;padding:3mm;color:#111;background:#fff;break-inside:avoid;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center}
+  .print-card .p-logo{max-width:35mm;max-height:10mm;object-fit:contain;margin-bottom:1mm}
+  .print-card .p-photo{width:19mm;height:19mm;border-radius:50%;object-fit:cover;margin:1mm auto}
+  .print-card .p-name{font-size:10pt;font-weight:bold;line-height:1.15;max-height:9mm;overflow:hidden}
+  .print-card .p-meta{font-size:7.5pt;line-height:1.25;margin-top:1mm}
+  .print-card .p-qr{width:29mm;height:29mm;margin:1mm auto;display:flex;align-items:center;justify-content:center}.print-card .p-qr svg{width:100%;height:100%}
+  .print-card .p-code{font-family:monospace;font-size:10pt;font-weight:bold;letter-spacing:1px}
+  .print-card .p-foot{margin-top:auto;width:100%;font-size:7pt;background:#3f9b3f;color:white;padding:2mm}
+}
 </style>
 </head>
 <body>
@@ -82,7 +98,18 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
   </div>
 
   <div id="v2" class="hide">
-    <input id="q" placeholder="Pesquisar nome, código, curso…" oninput="lista()">
+    <div class="card">
+      <div class="nm">1. Escolha a área / curso</div>
+      <div id="areaFilters" class="area-grid"></div>
+      <div class="filters">
+        <div><label>2. Classe</label><select id="fClasse" onchange="mudaClasse()"><option value="">Escolha a área primeiro</option></select></div>
+        <div><label>3. Turma</label><select id="fTurma" onchange="mudaTurma()"><option value="">Escolha a classe primeiro</option></select></div>
+      </div>
+      <label>4. Pesquisar aluno por nome ou código</label>
+      <input id="q" placeholder="Nome ou código do aluno…" oninput="lista()">
+      <button class="p" style="width:100%" onclick="imprimirLista()">Imprimir cartões da lista (6 por folha)</button>
+      <p class="mt">Escolha a área, a classe e a turma para encontrar os alunos com mais facilidade.</p>
+    </div>
     <div id="list"></div>
   </div>
 
@@ -152,7 +179,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 </div>
 </div>
 
-<div id="modal" class="hide" onclick="if(event.target===this)fechar()"><div>
+<div id="printArea" aria-hidden="true"></div>\n<div id="modal" class="hide" onclick="if(event.target===this)fechar()"><div>
   <div class="cardd" id="cartao"></div>
   <div class="g2" id="acoes" style="margin-top:10px"></div>
   <div class="g2" style="margin-top:8px"><button onclick="window.print()">Imprimir</button><button onclick="fechar()">Fechar</button></div>
@@ -209,7 +236,7 @@ onAuthStateChanged(auth,async u=>{
 });
 W("tab",n=>{
   if(n!==3&&EDIT)limparForm();for(let i=1;i<=8;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
-  if(n!==1)parar();if(n===4)relatorio();if(n===7)aprov();if(n===8)painel()
+  if(n!==1)parar();if(n===2){montaFiltrosAlunos();lista()}if(n===4)relatorio();if(n===7)aprov();if(n===8)painel()
 });
 
 async function carregar(){
@@ -341,12 +368,45 @@ const ficha=a=>{const p=a.pt||[];
   return `<div style="text-align:center"><img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Consulta QR Code</div>${a.foto?foto(a,"big mx"):""}<div class="nm" style="font-size:18px">${esc(a.nome)}</div><div class="mt">Registo Académico: <b>${esc(a.reg||a.codigo)}</b></div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ACTIVO":"BLOQUEADO"}</div></div>${avisos(a)}
   <div class="nm" style="margin-top:14px">Dados Académicos</div>${lin("Classe",a.classe)}${a.turma?lin("Turma",a.turma):""}${lin("Ciclo",ciclo(a.classe))}${lin("Curso",a.curso||a.area||"—")}${lin("Turno",a.turno)}${"idade" in a?lin("Idade",a.idade?a.idade+" anos":"—"):""}${lin("Ano Letivo",a.ano)}${lin("Polo",ESC.polo||"—")}
   ${a.pt?`<div class="nm" style="margin-top:14px">Situação Financeira</div>`:""}${a.pt?(ESC.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre<br><span class="mt">${dd(t.ini)} – ${dd(t.fim)}</span></span><b class="${p[i]?"pg":"np"}">${p[i]?"Pago":"Não pago"}</b></div>`).join(""):""}`};
+let areaFiltro="",classeFiltro="",turmaFiltro="";
+function montaFiltrosAlunos(){
+  const areas=[...new Set([...(ESC.areas||[]),...alunos.map(a=>a.area||a.curso).filter(Boolean)])].sort((a,b)=>a.localeCompare(b));
+  $("areaFilters").innerHTML=areas.map(ar=>`<button class="area-btn ${areaFiltro===ar?"on":""}" onclick="escolheArea('${esc(ar).replace(/'/g,"&#39;")}')">${esc(ar)}<small>${alunos.filter(a=>(a.area||a.curso)===ar).length} aluno(s)</small></button>`).join("")||'<p class="mt">Ainda não existem áreas cadastradas.</p>';
+  const sel=$("fClasse");sel.innerHTML='<option value="">Todas as classes</option>'+[...new Set(alunos.filter(a=>!areaFiltro||(a.area||a.curso)===areaFiltro).map(a=>a.classe).filter(Boolean))].sort((a,b)=>parseInt(a)-parseInt(b)).map(c=>`<option>${esc(c)}</option>`).join("");
+  sel.value=classeFiltro;
+  montaTurmasFiltro();
+}
+W("escolheArea",ar=>{areaFiltro=ar;classeFiltro="";turmaFiltro="";montaFiltrosAlunos();lista()});
+W("mudaClasse",()=>{classeFiltro=$("fClasse").value;turmaFiltro="";montaTurmasFiltro();lista()});
+W("mudaTurma",()=>{turmaFiltro=$("fTurma").value;lista()});
+function montaTurmasFiltro(){
+  const xs=alunos.filter(a=>(!areaFiltro||(a.area||a.curso)===areaFiltro)&&(!classeFiltro||a.classe===classeFiltro));
+  const ts=[...new Set(xs.map(a=>a.turma).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  $("fTurma").innerHTML='<option value="">Todas as turmas</option>'+ts.map(t=>`<option>${esc(t)}</option>`).join("");
+  $("fTurma").value=turmaFiltro;
+}
+function alunosFiltrados(){
+  const q=($("q")?.value||"").trim().toLowerCase();
+  return alunos.filter(a=>(!areaFiltro||(a.area||a.curso)===areaFiltro)&&(!classeFiltro||a.classe===classeFiltro)&&(!turmaFiltro||a.turma===turmaFiltro)&&(!q||(a.nome+" "+a.codigo+" "+a.curso+" "+a.classe+" "+a.turma).toLowerCase().includes(q)))
+    .sort((a,b)=>(a.nome||"").localeCompare(b.nome||""));
+}
 W("lista",()=>{
-  const q=$("q").value.toLowerCase();let h="";
-  const f=alunos.filter(a=>(a.nome+a.codigo+a.curso+a.classe).toLowerCase().includes(q));
-  if(!f.length)h='<p class="mt">Nenhum aluno encontrado.</p>';
-  let cu="";f.sort((a,b)=>(a.curso||"").localeCompare(b.curso||"")||a.nome.localeCompare(b.nome)).forEach(a=>{if((a.curso||"—")!==cu){cu=a.curso||"—";h+=`<div class="gh">${esc(cu)}</div>`}h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Activo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Actualizar</div>':""}</div></div>`});
+  if(!$("areaFilters"))return;
+  montaFiltrosAlunos();let h="";
+  const f=alunosFiltrados();
+  if(!f.length)h='<p class="mt">Nenhum aluno encontrado com estes filtros.</p>';
+  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.turma||"Sem turma")} · ${esc(a.area||a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Activo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Actualizar</div>':""}</div></div>`});
   $("list").innerHTML=h
+});
+W("imprimirLista",()=>{
+  const f=alunosFiltrados();
+  if(!f.length){alert("Não há alunos para imprimir com os filtros escolhidos.");return}
+  const box=$("printArea");
+  box.innerHTML=f.map(a=>{
+    const qr=qrcode(0,"M");qr.addData(urlCartao(a.codigo));qr.make();
+    return `<div class="print-card"><img class="p-logo" src="${LOGO()}" alt=""><div class="p-meta">${esc(ESC.nome||"Cartão de Estudante")}</div>${a.foto?`<img class="p-photo" src="${a.foto}" style="object-position:${a.fx??50}% ${a.fy??50}%;transform:scale(${Math.min(1.15,a.fz||1)});">`:""}<div class="p-name">${esc(a.nome)}</div><div class="p-meta">${esc(a.classe)} · Turma ${esc(a.turma||"—")}</div><div class="p-meta">${esc(a.area||a.curso||"")} · ${esc(a.turno||"")}</div><div class="p-qr">${qr.createSvgTag(3,0)}</div><div class="p-code">${esc(a.codigo)}</div><div class="p-foot">Ano letivo ${esc(a.ano||ESC.ano||ANO)}</div></div>`
+  }).join("");
+  window.print();
 });
 W("cartao",cod=>{
   const a=alunos.find(x=>x.codigo===cod);if(!a)return;
