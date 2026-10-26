@@ -89,7 +89,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <label>Turma</label><input id="turma" placeholder="Ex.: A">
     <label>Curso</label><select id="area" onchange="montaFp()"></select><input id="curso" type="hidden">
     <label>Turno</label><select id="turno"><option>Manhã</option><option>Tarde</option><option>Noite</option></select>
-    <label>Foto (vazio = manter a atual)</label><input id="foto" type="file" accept="image/*" onchange="escolheFoto()">
+    <label>Foto (vazio = manter a actual)</label><input id="foto" type="file" accept="image/*" onchange="escolheFoto()">
     <div id="fprev" class="fw" style="width:130px;height:130px;border-radius:50%;margin:0 auto 8px"></div>
     <label>Zoom</label><input class="sl" id="fz" type="range" min="1" max="3" step="0.05" value="1" oninput="ajFoto()">
     <label>Posição horizontal</label><input class="sl" id="fx" type="range" min="0" max="100" value="50" oninput="ajFoto()">
@@ -125,7 +125,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <p class="mt">O aviso da folha de prova aparece 14 dias antes do início e desaparece depois do fim. Ponha como fim o último dia de prova da área.</p>
     <div id="prbox"></div><button onclick="addProva()" style="width:100%;margin-bottom:10px">+ Adicionar período de provas</button>
     <p class="mt" id="cest"></p>
-    <div class="g2"><button onclick="guardarRas()">Guardar rascunho</button><button class="p" onclick="enviarRas()">Enviar ao diretor</button></div>
+    <div class="g2"><button onclick="guardarRas()">Guardar rascunho</button><button class="p" onclick="enviarRas()">Enviar ao director</button></div>
     <p class="mt" id="cmsg"></p>
   </div></div>
 
@@ -137,7 +137,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <label>Logótipo (vazio = logótipo do IPIB)</label><input id="logof" type="file" accept="image/*">
     <div id="prevl"></div>
     <button class="p" style="width:100%" onclick="salvarEscola()">Guardar</button>
-    <button onclick="sincTodos()" style="width:100%;margin-top:8px">Atualizar cartões públicos</button>
+    <button onclick="sincTodos()" style="width:100%;margin-top:8px">Actualizar cartões públicos</button>
     <p class="mt">Use uma vez para os alunos já cadastrados.</p>
     <p class="mt" id="emsg"></p>
   </div></div>
@@ -182,10 +182,10 @@ W("entrar",async()=>{
   catch(e){$("lerr").textContent="Código de acesso ou palavra-passe incorretos."}
 });
 W("sair",()=>signOut(auth));
-const ROT={admin:"Administrador",secretaria:"Secretaria",diretor:"Diretor",coordenador:"Coordenação",seguranca:"Segurança"};
+const ROT={admin:"Administrador",secretaria:"Secretaria",diretor:"Director",coordenador:"Coordenação",seguranca:"Segurança"};
 const TABS={admin:[1,2,3,4,6,7,5],secretaria:[2,3,6],diretor:[7],coordenador:[8,2],seguranca:[1]};
 const SITE=new URLSearchParams(location.search).get("s")||"";
-const SITES={secretaria:{t:"Secretaria",r:["secretaria"]},diretor:{t:"Direção",r:["diretor"]},coordenacao:{t:"Coordenação",r:["coordenador"]},entrada:{t:"Entrada",r:["seguranca"]}};
+const SITES={secretaria:{t:"Secretaria",r:["secretaria"]},diretor:{t:"Direcção",r:["diretor"]},coordenacao:{t:"Coordenação",r:["coordenador"]},entrada:{t:"Entrada",r:["seguranca"]}};
 if(SITES[SITE]){document.querySelector(".top h1").textContent=SITES[SITE].t;document.title=SITES[SITE].t+" · IPIB"}
 onAuthStateChanged(auth,async u=>{
   if(new URLSearchParams(location.search).get("c"))return;
@@ -268,17 +268,17 @@ W("salvarEscola",async()=>{
   ESC={...ESC,nome:$("escnome").value.trim(),polo:$("escpolo").value.trim(),areas:ar.length?ar:AREAS0,logo:logo||ESC.logo||""};
   try{await setDoc(doc(db,"config","escola"),ESC);$("emsg").textContent="Guardado.";$("logof").value="";prevL();montaAreas();desenhaEsc();montaFp()}catch(e){$("emsg").textContent="Erro ao guardar."}
 });
-W("sincTodos",async()=>{$("emsg").textContent="A atualizar…";try{for(const a of alunos)await sinc(a);$("emsg").textContent="Cartões atualizados: "+alunos.length}catch(e){$("emsg").textContent="Erro. Verifique as regras do Firestore."}});
+W("sincTodos",async()=>{$("emsg").textContent="A actualizar…";try{for(const a of alunos)await sinc(a);$("emsg").textContent="Cartões actualizados: "+alunos.length}catch(e){$("emsg").textContent="Erro. Verifique as regras do Firestore."}});
 async function guardaRas(est){
   lerEsc();RAS.ano=$("escano").value.trim()||ANO;RAS.ini=$("aini").value;RAS.fim=$("afim").value;RAS.estado=est;RAS.motivo="";RAS.por=ME.nome||"";RAS.em=new Date().toISOString();
-  try{await setDoc(doc(db,"config","rascunho"),RAS);$("cmsg").textContent=est==="pendente"?"Enviado ao diretor para aprovação.":"Rascunho guardado.";estadoCal()}catch(e){$("cmsg").textContent="Erro ao guardar."}
+  try{await setDoc(doc(db,"config","rascunho"),RAS);$("cmsg").textContent=est==="pendente"?"Enviado ao director para aprovação.":"Rascunho guardado.";estadoCal()}catch(e){$("cmsg").textContent="Erro ao guardar."}
 }
 W("guardarRas",()=>guardaRas("rascunho"));W("enviarRas",()=>guardaRas("pendente"));
-function estadoCal(){if(!$("cest")||!RAS)return;const e=RAS.estado||"aprovado";$("cest").innerHTML={rascunho:"Estado: rascunho (ainda não enviado)",pendente:"Estado: <b>pendente</b> — à espera da aprovação do diretor",aprovado:"Estado: <b class='ok'>aprovado</b>",rejeitado:"Estado: <b class='bad'>rejeitado</b> — "+esc(RAS.motivo||"sem motivo indicado")}[e]||""}
+function estadoCal(){if(!$("cest")||!RAS)return;const e=RAS.estado||"aprovado";$("cest").innerHTML={rascunho:"Estado: rascunho (ainda não enviado)",pendente:"Estado: <b>pendente</b> — à espera da aprovação do director",aprovado:"Estado: <b class='ok'>aprovado</b>",rejeitado:"Estado: <b class='bad'>rejeitado</b> — "+esc(RAS.motivo||"sem motivo indicado")}[e]||""}
 async function novos(){const el=$("novos");if(!el)return;
   try{const lim=new Date(Date.now()-30*864e5).toISOString();
     const l=(await getDocs(collection(db,"cartoes"))).docs.map(d=>d.data()).filter(a=>a.criado&&a.criado>=lim).sort((a,b)=>b.criado.localeCompare(a.criado));
-    el.innerHTML=l.length?l.map(a=>`<div class="pr"><span>${esc(a.nome)}<br><span class="mt">${esc(a.classe)} · ${esc(a.curso)}${a.area?" · "+esc(a.area):""}</span></span><b class="ok">Ativo</b></div>`).join(""):'<p class="mt">Nenhum aluno novo neste período.</p>'
+    el.innerHTML=l.length?l.map(a=>`<div class="pr"><span>${esc(a.nome)}<br><span class="mt">${esc(a.classe)} · ${esc(a.curso)}${a.area?" · "+esc(a.area):""}</span></span><b class="ok">Activo</b></div>`).join(""):'<p class="mt">Nenhum aluno novo neste período.</p>'
   }catch(e){el.innerHTML='<p class="mt">Não foi possível carregar.</p>'}}
 function aprov(){if(!$("apv")||!RAS)return;novos();
   const pr=(RAS.provas||[]).map(p=>`<div class="pr"><span>${esc(p.nome)}<br><span class="mt">${esc(p.area||"Todas")} · ${p.c1||7}.ª a ${p.c2||12}.ª</span></span><b>${dd(p.ini)} – ${dd(p.fim)}</b></div>`).join("")||'<p class="mt">Sem provas.</p>';
@@ -300,7 +300,7 @@ function painel(){if(!ME||ME.role!=="coordenador"||!$("pnl"))return;
   const o={};m.forEach(a=>{o[a.turno||"—"]=(o[a.turno||"—"]||0)+1});
   const tur=Object.entries(o).map(([k,v])=>`<div class="pr"><span>${esc(k)}</span><b>${v}</b></div>`).join("");
   const rc=m.filter(a=>a.reconf);
-  $("pnl").innerHTML=`<div class="card"><div class="mt">Área</div><div class="nm" style="font-size:18px">${esc(ME.area)}</div><div style="font-size:36px;font-weight:700">${m.length}</div><div class="mt">alunos</div></div><div class="card"><div class="nm">Por classe</div>${cl}</div><div class="card"><div class="nm">Por turno</div>${tur||'<p class="mt">Sem dados.</p>'}</div><div class="card"><div class="nm">Reconfirmação de matrícula</div>${rc.length?rc.map(a=>`<div class="pr" onclick="editar('${a.codigo}')"><span>${esc(a.nome)}</span><b class="np">Atualizar</b></div>`).join(""):'<p class="mt">Nenhum aluno à espera.</p>'}</div>`}
+  $("pnl").innerHTML=`<div class="card"><div class="mt">Área</div><div class="nm" style="font-size:18px">${esc(ME.area)}</div><div style="font-size:36px;font-weight:700">${m.length}</div><div class="mt">alunos</div></div><div class="card"><div class="nm">Por classe</div>${cl}</div><div class="card"><div class="nm">Por turno</div>${tur||'<p class="mt">Sem dados.</p>'}</div><div class="card"><div class="nm">Reconfirmação de matrícula</div>${rc.length?rc.map(a=>`<div class="pr" onclick="editar('${a.codigo}')"><span>${esc(a.nome)}</span><b class="np">Actualizar</b></div>`).join(""):'<p class="mt">Nenhum aluno à espera.</p>'}</div>`}
 W("reconf",async cod=>{const a=alunos.find(x=>x.codigo===cod);a.reconf=!a.reconf;await updateDoc(doc(db,"students",cod),{reconf:a.reconf});lista();cartao(cod)});
 
 W("salvar",async()=>{
@@ -327,14 +327,14 @@ W("editar",cod=>{
 });
 const ficha=a=>{const p=a.pt||[];
   const lin=(k,v)=>`<div class="pr"><span>${k}</span><b>${esc(v)}</b></div>`;
-  return `<div style="text-align:center"><img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Consulta QR Code</div>${a.foto?foto(a,"big mx"):""}<div class="nm" style="font-size:18px">${esc(a.nome)}</div><div class="mt">Registo Académico: <b>${esc(a.reg||a.codigo)}</b></div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ATIVO":"BLOQUEADO"}</div></div>${avisos(a)}
+  return `<div style="text-align:center"><img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Consulta QR Code</div>${a.foto?foto(a,"big mx"):""}<div class="nm" style="font-size:18px">${esc(a.nome)}</div><div class="mt">Registo Académico: <b>${esc(a.reg||a.codigo)}</b></div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ACTIVO":"BLOQUEADO"}</div></div>${avisos(a)}
   <div class="nm" style="margin-top:14px">Dados Académicos</div>${lin("Classe",a.classe)}${a.turma?lin("Turma",a.turma):""}${lin("Ciclo",ciclo(a.classe))}${lin("Curso",a.curso||a.area||"—")}${lin("Turno",a.turno)}${"idade" in a?lin("Idade",a.idade?a.idade+" anos":"—"):""}${lin("Ano Letivo",a.ano)}${lin("Polo",ESC.polo||"—")}
   ${a.pt?`<div class="nm" style="margin-top:14px">Situação Financeira</div>`:""}${a.pt?(ESC.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre<br><span class="mt">${dd(t.ini)} – ${dd(t.fim)}</span></span><b class="${p[i]?"pg":"np"}">${p[i]?"Pago":"Não pago"}</b></div>`).join(""):""}`};
 W("lista",()=>{
   const q=$("q").value.toLowerCase();let h="";
   const f=alunos.filter(a=>(a.nome+a.codigo+a.curso+a.classe).toLowerCase().includes(q));
   if(!f.length)h='<p class="mt">Nenhum aluno encontrado.</p>';
-  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Ativo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Atualizar</div>':""}</div></div>`});
+  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Activo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Actualizar</div>':""}</div></div>`});
   $("list").innerHTML=h
 });
 W("cartao",cod=>{
@@ -342,7 +342,7 @@ W("cartao",cod=>{
   const qr=qrcode(0,"M");qr.addData(urlCartao(a.codigo));qr.make();
   $("cartao").innerHTML=`<div class="bn"></div><div class="bd">${foto(a,"fo")}<div style="font-weight:700;margin-top:6px">${esc(a.nome)}</div><div>${qr.createSvgTag(4,0)}</div><div class="cd" style="font-size:22px;color:#2b4a8f">${esc(a.codigo)}</div>${avisos(a)}</div><div class="gv">Ano letivo ${esc(a.ano)}</div>`;
   const ps=["admin","secretaria"].includes(ME.role);
-  $("acoes").innerHTML=(ps?`<button onclick="alternar('${a.codigo}')">${a.ativo?"Bloquear código":"Reativar código"}</button>`:"")+(ps||ME.role==="coordenador"?`<button onclick="editar('${a.codigo}')">Editar</button>`:"")+(ps?`<button onclick="reconf('${a.codigo}')">${a.reconf?"Cancelar reconfirmação":"Matrícula reconfirmada"}</button>`:"");
+  $("acoes").innerHTML=(ps?`<button onclick="alternar('${a.codigo}')">${a.ativo?"Bloquear código":"Reactivar código"}</button>`:"")+(ps||ME.role==="coordenador"?`<button onclick="editar('${a.codigo}')">Editar</button>`:"")+(ps?`<button onclick="reconf('${a.codigo}')">${a.reconf?"Cancelar reconfirmação":"Matrícula reconfirmada"}</button>`:"");
   $("modal").classList.remove("hide")
 });
 W("alternar",async cod=>{
@@ -395,7 +395,7 @@ if(PC){(async()=>{
     const cab=`<img class="logo" src="${LOGO()}" alt="">${ESC.nome?`<div class="nm">${esc(ESC.nome)}</div>`:""}<div class="mt">Cartão de Estudante Digital</div>`;
     if(!s.exists()){$("pub").innerHTML=`<div class="card" style="text-align:center">${cab}<div class="nm bad" style="margin-top:10px">Cartão não encontrado</div></div>`;return}
     const a=s.data(),lin=(k,v)=>`<div class="pr"><span>${k}</span><b>${esc(v)}</b></div>`;
-    $("pub").innerHTML=`<div class="card" style="text-align:center">${cab}${foto(a,"big mx")}<div class="nm" style="font-size:20px">${esc(a.nome)}</div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ATIVO":"BLOQUEADO"}</div></div><div class="card">${lin("Classe",a.classe)}${lin("Curso",a.curso||a.area||"—")}${lin("Turno",a.turno)}${avisos(a)}</div>`
+    $("pub").innerHTML=`<div class="card" style="text-align:center">${cab}${foto(a,"big mx")}<div class="nm" style="font-size:20px">${esc(a.nome)}</div><div class="nm ${a.ativo?"ok":"bad"}">${a.ativo?"ACTIVO":"BLOQUEADO"}</div></div><div class="card">${lin("Classe",a.classe)}${lin("Curso",a.curso||a.area||"—")}${lin("Turno",a.turno)}${avisos(a)}</div>`
   }catch(e){$("pub").innerHTML='<div class="card" style="text-align:center"><div class="nm bad">Não foi possível carregar o cartão.</div></div>'}
 })()}
 </script>
