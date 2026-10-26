@@ -10,7 +10,7 @@
 :root{--bg:#eaf1fb;--card:#fff;--tx:#14181f;--mut:#667085;--pri:#2b4a8f;--acc:#3f9b3f;--ok:#15803d;--bad:#b91c1c;--bd:#e3e6eb}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
-.w{max-width:640px;margin:0 auto;padding:16px}
+.w{max-width:1200px;margin:0 auto;padding:16px}
 h1{font-size:20px;margin:0}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:12px;background:#2b4a8f;border-bottom:5px solid #3f9b3f;border-radius:14px}.top h1{color:#fff}.top button{background:#fff;color:#2b4a8f;border-color:#fff;font-weight:600}.hl{width:46px;height:46px;object-fit:contain;background:#fff;border-radius:10px;padding:2px}
 .tabs{display:flex;overflow-x:auto;gap:6px;margin-bottom:14px;padding-bottom:4px}.tabs button{flex:none;font-size:14px;padding:10px 14px}.pr{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:15px}.pg{color:var(--ok)}.np{color:var(--bad)}.logo{max-height:70px;max-width:70%;display:block;margin:0 auto 8px;background:#fff;border-radius:12px;padding:4px}.ck{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}.ck label{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--tx)}.ck input{width:auto;margin:0}
 button,input,select{font:inherit;color:inherit}
@@ -34,6 +34,14 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 .cardd .bd{padding:0 16px 12px}.cardd .gv{background:#3f9b3f;color:#fff;padding:8px;font-size:13px;font-weight:600}.cardd svg{width:180px;height:180px;margin:8px 0}
 .fw{display:block;overflow:hidden;background:var(--bd);flex:none}.fw img{width:100%;height:100%;object-fit:cover;display:block}.ph.fw{border-radius:50%}.big.fw{border-radius:14px}.mx{margin:8px auto}.fprevin{width:100%;height:100%}
 .al{border-radius:12px;padding:10px;margin-top:12px;text-align:center;font-weight:700;color:#fff}.al.g{background:#3f9b3f}.al.r{background:#b91c1c}.al small{display:block;font-weight:400;font-size:12px}.cardd .al{margin:8px 0 0;font-size:13px}.sl{padding:0;margin:2px 0 8px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#login{max-width:420px;margin:24px auto}
+#v1>.card,#v3>.card,#v5>.card,#res{max-width:760px}#q{max-width:520px}#dia{max-width:260px}
+#list,#rel,#pnl,.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
+#list .card,#rel .card,#pnl .card,.cols .card{margin:0}
+.gh{grid-column:1/-1;font-weight:700;color:var(--pri);border-bottom:2px solid var(--acc);padding:6px 0;margin-top:6px}
+#trbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px}
+#prbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}#prbox .card{margin:0}
+.cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-top:8px}.cols3 .card{margin:0}
 @media print{body *{visibility:hidden}.cardd,.cardd *{visibility:visible}.cardd{position:absolute;left:0;top:0}}
 </style>
 </head>
@@ -112,7 +120,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
     <div class="g2"><button class="p" onclick="aprovar(true)">Aprovar</button><button onclick="aprovar(false)">Rejeitar</button></div>
     <p class="mt" id="amsg"></p>
   </div>
-  <div class="card"><div class="nm" style="margin-bottom:6px">Alunos novos (últimos 30 dias)</div><div id="novos"></div></div></div>
+  <div class="card"><div class="nm" style="margin-bottom:6px">Alunos novos (últimos 30 dias)</div><div id="novos" class="cols"></div></div></div>
 
   <div id="v8" class="hide"><div id="pnl"></div></div>
 
@@ -256,9 +264,9 @@ function desenhaEsc(){
   $("escano").value=RAS.ano||"";$("aini").value=RAS.ini||"";$("afim").value=RAS.fim||"";
   const cl=(id,v)=>`<select id="${id}">${[7,8,9,10,11,12].map(n=>`<option value="${n}" ${n==v?"selected":""}>${n}.ª</option>`).join("")}</select>`;
   $("trbox").innerHTML=RAS.trim.map((t,i)=>`<div class="row2"><div><label>${i+1}.º Trim. – início</label><input type="date" id="ti${i}" value="${t.ini}"></div><div><label>fim</label><input type="date" id="tf${i}" value="${t.fim}"></div></div>`).join("");
-  $("prbox").innerHTML=RAS.provas.map((p,i)=>`<div class="card" style="padding:10px"><label>Nome</label><input id="pn${i}" value="${qa(p.nome)}"><label>Área</label><select id="pa${i}">${["Todas",...ESC.areas].map(x=>`<option ${(p.area||"Todas")===x?"selected":""}>${esc(x)}</option>`).join("")}</select><div class="row2"><div><label>Da classe</label>${cl("pc1"+i,p.c1||7)}</div><div><label>Até à classe</label>${cl("pc2"+i,p.c2||12)}</div></div><div class="row2"><div><label>Início</label><input type="date" id="pi${i}" value="${p.ini}"></div><div><label>Fim (último dia)</label><input type="date" id="pf${i}" value="${p.fim}"></div></div><button onclick="delProva(${i})">Remover</button></div>`).join("")}
-function lerEsc(){RAS.trim=RAS.trim.map((t,i)=>({ini:$("ti"+i).value,fim:$("tf"+i).value}));RAS.provas=RAS.provas.map((p,i)=>({id:p.id,nome:$("pn"+i).value.trim(),area:$("pa"+i).value,c1:Number($("pc1"+i).value),c2:Number($("pc2"+i).value),ini:$("pi"+i).value,fim:$("pf"+i).value}))}
-W("addProva",()=>{lerEsc();RAS.provas.push({id:"p"+Date.now(),nome:"Provas do "+(RAS.provas.length+1)+".º Trimestre",area:"Todas",c1:7,c2:12,ini:"",fim:""});desenhaEsc()});
+  $("prbox").innerHTML=RAS.provas.map((p,i)=>`<div class="card" style="padding:10px"><label>Nome</label><input id="pn${i}" value="${qa(p.nome)}"><label>Trimestre</label><select id="pt${i}">${[1,2,3].map(n=>`<option value="${n}" ${n==(p.tri||1)?"selected":""}>${n}.º Trimestre</option>`).join("")}</select><label>Curso</label><select id="pa${i}">${["Todas",...ESC.areas].map(x=>`<option ${(p.area||"Todas")===x?"selected":""}>${esc(x)}</option>`).join("")}</select><div class="row2"><div><label>Da classe</label>${cl("pc1"+i,p.c1||7)}</div><div><label>Até à classe</label>${cl("pc2"+i,p.c2||12)}</div></div><div class="row2"><div><label>Início</label><input type="date" id="pi${i}" value="${p.ini}"></div><div><label>Fim (último dia)</label><input type="date" id="pf${i}" value="${p.fim}"></div></div><button onclick="delProva(${i})">Remover</button></div>`).join("")}
+function lerEsc(){RAS.trim=RAS.trim.map((t,i)=>({ini:$("ti"+i).value,fim:$("tf"+i).value}));RAS.provas=RAS.provas.map((p,i)=>({id:p.id,nome:$("pn"+i).value.trim(),area:$("pa"+i).value,c1:Number($("pc1"+i).value),c2:Number($("pc2"+i).value),ini:$("pi"+i).value,fim:$("pf"+i).value,tri:Number($("pt"+i).value)}))}
+W("addProva",()=>{lerEsc();RAS.provas.push({id:"p"+Date.now(),nome:"Provas do "+(RAS.provas.length+1)+".º Trimestre",area:"Todas",c1:7,c2:12,tri:1,ini:"",fim:""});desenhaEsc()});
 W("delProva",i=>{lerEsc();RAS.provas.splice(i,1);desenhaEsc()});
 const reduzirLogo=f=>new Promise(res=>{if(!f)return res("");const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,300/im.width),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)});
 function prevL(){$("prevl").innerHTML=ESC.logo?`<img class="logo" src="${ESC.logo}" alt="">`:""}
@@ -278,12 +286,15 @@ function estadoCal(){if(!$("cest")||!RAS)return;const e=RAS.estado||"aprovado";$
 async function novos(){const el=$("novos");if(!el)return;
   try{const lim=new Date(Date.now()-30*864e5).toISOString();
     const l=(await getDocs(collection(db,"cartoes"))).docs.map(d=>d.data()).filter(a=>a.criado&&a.criado>=lim).sort((a,b)=>b.criado.localeCompare(a.criado));
-    el.innerHTML=l.length?l.map(a=>`<div class="pr"><span>${esc(a.nome)}<br><span class="mt">${esc(a.classe)} · ${esc(a.curso)}${a.area?" · "+esc(a.area):""}</span></span><b class="ok">Activo</b></div>`).join(""):'<p class="mt">Nenhum aluno novo neste período.</p>'
+    const g={};l.forEach(a=>{const k=a.curso||a.area||"—";(g[k]=g[k]||[]).push(a)});
+    el.innerHTML=Object.keys(g).length?Object.keys(g).sort().map(k=>`<div class="card"><div class="nm">${esc(k)} <span class="mt">(${g[k].length})</span></div>${g[k].map(a=>`<div class="pr"><span>${esc(a.nome)}<br><span class="mt">${esc(a.classe)}</span></span><b class="ok">Activo</b></div>`).join("")}</div>`).join(""):'<p class="mt">Nenhum aluno novo neste período.</p>'
   }catch(e){el.innerHTML='<p class="mt">Não foi possível carregar.</p>'}}
+const triDe=p=>p.tri||((RAS.trim||[]).findIndex(t=>p.ini&&t.ini&&p.ini>=t.ini&&p.ini<=t.fim)+1)||1;
 function aprov(){if(!$("apv")||!RAS)return;novos();
-  const pr=(RAS.provas||[]).map(p=>`<div class="pr"><span>${esc(p.nome)}<br><span class="mt">${esc(p.area||"Todas")} · ${p.c1||7}.ª a ${p.c2||12}.ª</span></span><b>${dd(p.ini)} – ${dd(p.fim)}</b></div>`).join("")||'<p class="mt">Sem provas.</p>';
   const tr=(RAS.trim||[]).map((t,i)=>`<div class="pr"><span>${i+1}.º Trimestre</span><b>${dd(t.ini)} – ${dd(t.fim)}</b></div>`).join("");
-  $("apv").innerHTML=`<p class="mt">Estado: <b>${esc(RAS.estado||"aprovado")}</b>${RAS.por?" · enviado por "+esc(RAS.por):""}</p><div class="pr"><span>Ano letivo ${esc(RAS.ano||"")}</span><b>${dd(RAS.ini)} – ${dd(RAS.fim)}</b></div>${tr}<div class="nm" style="margin-top:10px">Provas</div>${pr}`}
+  const col=[1,2,3].map(n=>{const l=(RAS.provas||[]).filter(p=>triDe(p)===n).sort((a,b)=>(a.area||"").localeCompare(b.area||"")||(a.c1||7)-(b.c1||7));
+    return `<div class="card"><div class="nm">Provas do ${n}.º Trimestre</div>${l.length?l.map(p=>`<div class="pr"><span>${esc(p.area&&p.area!=="Todas"?p.area:"Todos os cursos")}<br><span class="mt">${p.c1||7}.ª a ${p.c2||12}.ª</span></span><b>${dd(p.ini)} – ${dd(p.fim)}</b></div>`).join(""):'<p class="mt">Sem provas.</p>'}</div>`}).join("");
+  $("apv").innerHTML=`<p class="mt">Estado: <b>${esc(RAS.estado||"aprovado")}</b>${RAS.por?" · enviado por "+esc(RAS.por):""}</p><div class="pr"><span>Ano letivo ${esc(RAS.ano||"")}</span><b>${dd(RAS.ini)} – ${dd(RAS.fim)}</b></div>${tr}<div class="nm" style="margin-top:12px">Provas</div><div class="cols3">${col}</div>`}
 W("aprovar",async ok=>{
   if(!RAS||RAS.estado!=="pendente"){$("amsg").textContent="Não há calendário pendente.";return}
   try{
@@ -299,8 +310,8 @@ function painel(){if(!ME||ME.role!=="coordenador"||!$("pnl"))return;
   const cl=[7,8,9,10,11,12,13].map(n=>{const x=m.filter(a=>parseInt(a.classe)===n);const t=[...new Set(x.map(a=>a.turma||"—"))];return `<div class="pr"><span>${n}.ª</span><span><b>${x.length}</b> alunos · ${t.length} turma(s)${x.length?" ("+t.map(esc).join(", ")+")":""}</span></div>`}).join("");
   const o={};m.forEach(a=>{o[a.turno||"—"]=(o[a.turno||"—"]||0)+1});
   const tur=Object.entries(o).map(([k,v])=>`<div class="pr"><span>${esc(k)}</span><b>${v}</b></div>`).join("");
-  const rc=m.filter(a=>a.reconf);
-  $("pnl").innerHTML=`<div class="card"><div class="mt">Área</div><div class="nm" style="font-size:18px">${esc(ME.area)}</div><div style="font-size:36px;font-weight:700">${m.length}</div><div class="mt">alunos</div></div><div class="card"><div class="nm">Por classe</div>${cl}</div><div class="card"><div class="nm">Por turno</div>${tur||'<p class="mt">Sem dados.</p>'}</div><div class="card"><div class="nm">Reconfirmação de matrícula</div>${rc.length?rc.map(a=>`<div class="pr" onclick="editar('${a.codigo}')"><span>${esc(a.nome)}</span><b class="np">Actualizar</b></div>`).join(""):'<p class="mt">Nenhum aluno à espera.</p>'}</div>`}
+  const rc=m.filter(a=>a.reconf);const lim=new Date(Date.now()-30*864e5).toISOString();const nv=m.filter(a=>a.criado&&a.criado>=lim);const nvCard=`<div class="card"><div class="nm">Alunos novos (30 dias) <span class="mt">(${nv.length})</span></div>${nv.length?nv.map(a=>`<div class="pr"><span>${esc(a.nome)}</span><b>${esc(a.classe)}${a.turma?" "+esc(a.turma):""}</b></div>`).join(""):'<p class="mt">Nenhum aluno novo.</p>'}</div>`;
+  $("pnl").innerHTML=`<div class="card"><div class="mt">Área</div><div class="nm" style="font-size:18px">${esc(ME.area)}</div><div style="font-size:36px;font-weight:700">${m.length}</div><div class="mt">alunos</div></div><div class="card"><div class="nm">Por classe</div>${cl}</div><div class="card"><div class="nm">Por turno</div>${tur||'<p class="mt">Sem dados.</p>'}</div>${nvCard}<div class="card"><div class="nm">Reconfirmação de matrícula</div>${rc.length?rc.map(a=>`<div class="pr" onclick="editar('${a.codigo}')"><span>${esc(a.nome)}</span><b class="np">Actualizar</b></div>`).join(""):'<p class="mt">Nenhum aluno à espera.</p>'}</div>`}
 W("reconf",async cod=>{const a=alunos.find(x=>x.codigo===cod);a.reconf=!a.reconf;await updateDoc(doc(db,"students",cod),{reconf:a.reconf});lista();cartao(cod)});
 
 W("salvar",async()=>{
@@ -334,7 +345,7 @@ W("lista",()=>{
   const q=$("q").value.toLowerCase();let h="";
   const f=alunos.filter(a=>(a.nome+a.codigo+a.curso+a.classe).toLowerCase().includes(q));
   if(!f.length)h='<p class="mt">Nenhum aluno encontrado.</p>';
-  f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Activo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Actualizar</div>':""}</div></div>`});
+  let cu="";f.sort((a,b)=>(a.curso||"").localeCompare(b.curso||"")||a.nome.localeCompare(b.nome)).forEach(a=>{if((a.curso||"—")!==cu){cu=a.curso||"—";h+=`<div class="gh">${esc(cu)}</div>`}h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Activo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Actualizar</div>':""}</div></div>`});
   $("list").innerHTML=h
 });
 W("cartao",cod=>{
