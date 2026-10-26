@@ -45,19 +45,23 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 #prbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}#prbox .card{margin:0}
 .cols3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-top:8px}.cols3 .card{margin:0}
 @media print{
-  @page{size:A4 portrait;margin:7mm}
-  body{background:#fff!important;padding:0!important}
+  @page{size:A4 portrait;margin:8mm}
+  body{background:#fff!important;padding:0!important;margin:0!important}
   body *{visibility:hidden!important}
-  #printArea,#printArea *{visibility:visible!important}
-  #printArea{display:grid!important;position:absolute;left:0;top:0;width:196mm;grid-template-columns:repeat(2,63mm);grid-auto-rows:88mm;gap:5mm 8mm;justify-content:center;align-content:start}
-  .print-card{width:63mm;height:88mm;border:1px solid #888;border-radius:4mm;overflow:hidden;text-align:center;padding:3mm;color:#111;background:#fff;break-inside:avoid;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center}
-  .print-card .p-logo{max-width:35mm;max-height:10mm;object-fit:contain;margin-bottom:1mm}
-  .print-card .p-photo{width:19mm;height:19mm;border-radius:50%;object-fit:cover;margin:1mm auto}
-  .print-card .p-name{font-size:10pt;font-weight:bold;line-height:1.15;max-height:9mm;overflow:hidden}
-  .print-card .p-meta{font-size:7.5pt;line-height:1.25;margin-top:1mm}
-  .print-card .p-qr{width:29mm;height:29mm;margin:1mm auto;display:flex;align-items:center;justify-content:center}.print-card .p-qr svg{width:100%;height:100%}
-  .print-card .p-code{font-family:monospace;font-size:10pt;font-weight:bold;letter-spacing:1px}
-  .print-card .p-foot{margin-top:auto;width:100%;font-size:7pt;background:#3f9b3f;color:white;padding:2mm}
+  #printPreview,#printPreview *{visibility:visible!important}
+  #printPreview{display:block!important;position:absolute;left:0;top:0;width:194mm;margin:0;padding:0;background:#fff}
+  #printPreview .preview-tools{display:none!important}
+  #printArea{display:grid!important;position:static!important;width:100%;grid-template-columns:repeat(3,56mm);grid-auto-rows:67mm;gap:4mm 4mm;justify-content:center;align-content:start}
+  .print-card{width:56mm;height:67mm;border:0.25mm solid #888;border-radius:2.5mm;overflow:hidden;text-align:center;padding:2mm;color:#111;background:#fff;break-inside:avoid;page-break-inside:avoid;font-family:Arial,sans-serif;display:flex;flex-direction:column;align-items:center}
+  .print-card .p-logo{max-width:25mm;max-height:6mm;object-fit:contain;margin-bottom:.5mm}
+  .print-card .p-school{font-size:6pt;line-height:1.1;max-height:5mm;overflow:hidden}
+  .print-card .p-photo{width:12mm;height:12mm;border-radius:50%;object-fit:cover;margin:1mm auto}
+  .print-card .p-name{font-size:7.5pt;font-weight:bold;line-height:1.1;max-height:7mm;overflow:hidden;width:100%;overflow-wrap:anywhere}
+  .print-card .p-meta{font-size:6pt;line-height:1.15;margin-top:.5mm;width:100%;overflow-wrap:anywhere}
+  .print-card .p-qr{width:18mm;height:18mm;flex:none;margin:.5mm auto;display:flex;align-items:center;justify-content:center}
+  .print-card .p-qr svg{width:100%!important;height:100%!important;display:block}
+  .print-card .p-code{font-family:Arial,sans-serif;font-size:7.5pt;font-weight:bold;letter-spacing:.3px;line-height:1.2;overflow-wrap:anywhere;max-width:100%;color:#111}
+  .print-card .p-foot{margin-top:auto;width:100%;font-size:5.5pt;line-height:1.1;background:#3f9b3f;color:white;padding:1mm;overflow-wrap:anywhere}
 }
 </style>
 </head>
@@ -107,7 +111,7 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
       </div>
       <label>4. Pesquisar aluno por nome ou código</label>
       <input id="q" placeholder="Nome ou código do aluno…" oninput="lista()">
-      <button class="p" style="width:100%" onclick="imprimirLista()">Imprimir cartões da lista (6 por folha)</button>
+      <button class="p" style="width:100%" onclick="imprimirLista()">Escolher alunos e imprimir cartões</button>
       <p class="mt">Escolha a área, a classe e a turma para encontrar os alunos com mais facilidade.</p>
     </div>
     <div id="list"></div>
@@ -179,7 +183,33 @@ video{width:100%;border-radius:12px;background:#000;margin-bottom:10px}
 </div>
 </div>
 
-<div id="printArea" aria-hidden="true"></div>\n<div id="modal" class="hide" onclick="if(event.target===this)fechar()"><div>
+<div id="selectionModal" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;padding:12px;overflow:auto">
+  <div class="card" style="max-width:760px;margin:12px auto;background:#fff">
+    <div class="nm" style="font-size:18px">Escolher cartões para imprimir</div>
+    <p class="mt">Marca apenas os alunos cujos cartões queres imprimir.</p>
+    <div class="row2" style="margin:8px 0">
+      <button onclick="marcarVisiveis(true)">Selecionar todos os resultados</button>
+      <button onclick="marcarVisiveis(false)">Desmarcar todos</button>
+    </div>
+    <div id="selectionList"></div>
+    <div class="g2" style="margin-top:12px">
+      <button class="p" onclick="mostrarPrevia()">Selecionar e continuar</button>
+      <button onclick="fecharSelecao()">Cancelar</button>
+    </div>
+  </div>
+</div>
+<div id="printPreview" class="hide">
+  <div class="preview-tools card">
+    <div class="nm" style="font-size:18px">Pré-visualização dos cartões</div>
+    <p class="mt">Confirma os nomes, fotografias, QR Codes e códigos. A folha está organizada em 3 colunas por 3 filas, com cartões de 5,6 × 6,7 cm.</p>
+    <div class="g2">
+      <button class="p" onclick="window.print()">Imprimir cartões selecionados</button>
+      <button onclick="voltarSelecao()">Voltar à seleção</button>
+    </div>
+  </div>
+  <div id="printArea"></div>
+</div>
+<div id="modal" class="hide" onclick="if(event.target===this)fechar()"><div>
   <div class="cardd" id="cartao"></div>
   <div class="g2" id="acoes" style="margin-top:10px"></div>
   <div class="g2" style="margin-top:8px"><button onclick="window.print()">Imprimir</button><button onclick="fechar()">Fechar</button></div>
@@ -235,6 +265,7 @@ onAuthStateChanged(auth,async u=>{
   TABS[ME.role].forEach(k=>{const b=$("t"+k);b.classList.remove("hide");box.appendChild(b)});tab(TABS[ME.role][0])
 });
 W("tab",n=>{
+  $("printPreview")?.classList.add("hide");$("selectionModal")?.classList.add("hide");
   if(n!==3&&EDIT)limparForm();for(let i=1;i<=8;i++){$("v"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)}
   if(n!==1)parar();if(n===2){montaFiltrosAlunos();lista()}if(n===4)relatorio();if(n===7)aprov();if(n===8)painel()
 });
@@ -398,16 +429,44 @@ W("lista",()=>{
   f.forEach(a=>{h+=`<div class="card row" onclick="cartao('${a.codigo}')">${foto(a,"ph")}<div class="grow"><div class="nm">${esc(a.nome)}</div><div class="mt">${esc(a.classe)} · ${esc(a.turma||"Sem turma")} · ${esc(a.area||a.curso)} · ${esc(a.turno)}</div></div><div style="text-align:right"><div class="cd">${esc(a.codigo)}</div><div class="mt ${a.ativo?"ok":"bad"}">${a.ativo?"Activo":"Bloqueado"}</div>${a.reconf?'<div class="mt bad">Actualizar</div>':""}</div></div>`});
   $("list").innerHTML=h
 });
-W("imprimirLista",()=>{
+let codigosImpressao=new Set();
+function imprimirLista(){
   const f=alunosFiltrados();
-  if(!f.length){alert("Não há alunos para imprimir com os filtros escolhidos.");return}
-  const box=$("printArea");
-  box.innerHTML=f.map(a=>{
+  if(!f.length){alert("Não há alunos para selecionar com estes filtros.");return}
+  codigosImpressao=new Set();
+  $("selectionList").innerHTML=f.map(a=>`<label class="card row" style="margin:5px 0;padding:9px;cursor:pointer">
+    <input type="checkbox" class="sel-print" value="${esc(a.codigo)}" style="width:20px;flex:none;margin:0 5px 0 0">
+    ${foto(a,"ph")}<span class="grow"><span class="nm">${esc(a.nome)}</span><br><span class="mt">${esc(a.classe)} · Turma ${esc(a.turma||"—")} · ${esc(a.area||a.curso||"")}</span><br><span class="cd">${esc(a.codigo)}</span></span>
+  </label>`).join("");
+  $("selectionModal").classList.remove("hide");
+}
+function marcarVisiveis(valor){document.querySelectorAll(".sel-print").forEach(c=>c.checked=valor)}
+function fecharSelecao(){$("selectionModal").classList.add("hide")}
+function voltarSelecao(){$("printPreview").classList.add("hide");$("selectionModal").classList.remove("hide")}
+function mostrarPrevia(){
+  const escolhidos=[...document.querySelectorAll(".sel-print:checked")].map(c=>c.value);
+  if(!escolhidos.length){alert("Seleciona pelo menos um aluno.");return}
+  codigosImpressao=new Set(escolhidos);
+  const f=escolhidos.map(c=>alunos.find(a=>a.codigo===c)).filter(Boolean);
+  $("printArea").innerHTML=f.map(a=>{
     const qr=qrcode(0,"M");qr.addData(urlCartao(a.codigo));qr.make();
-    return `<div class="print-card"><img class="p-logo" src="${LOGO()}" alt=""><div class="p-meta">${esc(ESC.nome||"Cartão de Estudante")}</div>${a.foto?`<img class="p-photo" src="${a.foto}" style="object-position:${a.fx??50}% ${a.fy??50}%;transform:scale(${Math.min(1.15,a.fz||1)});">`:""}<div class="p-name">${esc(a.nome)}</div><div class="p-meta">${esc(a.classe)} · Turma ${esc(a.turma||"—")}</div><div class="p-meta">${esc(a.area||a.curso||"")} · ${esc(a.turno||"")}</div><div class="p-qr">${qr.createSvgTag(3,0)}</div><div class="p-code">${esc(a.codigo)}</div><div class="p-foot">Ano letivo ${esc(a.ano||ESC.ano||ANO)}</div></div>`
+    return `<div class="print-card">
+      <img class="p-logo" src="${LOGO()}" alt="">
+      <div class="p-school">${esc(ESC.nome||"Cartão de Estudante")}</div>
+      ${a.foto?`<img class="p-photo" src="${a.foto}" style="object-position:${a.fx??50}% ${a.fy??50}%;">`:""}
+      <div class="p-name">${esc(a.nome||"—")}</div>
+      <div class="p-meta">${esc(a.classe||"—")} · Turma ${esc(a.turma||"—")}</div>
+      <div class="p-meta">${esc(a.area||a.curso||"")} · ${esc(a.turno||"")}</div>
+      <div class="p-qr">${qr.createSvgTag(2,0)}</div>
+      <div class="p-code">${esc(a.codigo||a.reg||"SEM CÓDIGO")}</div>
+      <div class="p-foot">Ano letivo ${esc(a.ano||ESC.ano||ANO)}</div>
+    </div>`;
   }).join("");
-  window.print();
-});
+  fecharSelecao();
+  $("printPreview").classList.remove("hide");
+  $("printPreview").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 W("cartao",cod=>{
   const a=alunos.find(x=>x.codigo===cod);if(!a)return;
   const qr=qrcode(0,"M");qr.addData(urlCartao(a.codigo));qr.make();
